@@ -21,6 +21,16 @@ MIN_PLAYS = {
     "TE": 50,
 }
 
+# draft_picks_raw uses pfr-style abbreviations (GNB/KAN/etc) instead of the
+# standard nflverse abbreviations used elsewhere. Normalize here so every
+# downstream parquet uses one consistent team key, and treat relocated
+# franchises (Oakland->Las Vegas, etc.) as a single continuous franchise.
+TEAM_ABBR_NORMALIZE = {
+    "GNB": "GB", "KAN": "KC", "LVR": "LV", "NOR": "NO", "NWE": "NE",
+    "SDG": "LAC", "SD": "LAC", "SFO": "SF", "TAM": "TB", "OAK": "LV",
+    "STL": "LA", "LAR": "LA", "JAC": "JAX",
+}
+
 
 def main() -> None:
     draft_picks = pd.read_parquet(RAW_DIR / "draft_picks_raw.parquet")
@@ -30,6 +40,7 @@ def main() -> None:
     draft_picks = draft_picks.dropna(subset=["gsis_id"])
     draft_picks = draft_picks.rename(columns={"season": "draft_year", "pfr_player_name": "player_name"})
     draft_picks = draft_picks[draft_picks["position"].isin(MIN_PLAYS.keys())]
+    draft_picks["team"] = draft_picks["team"].map(lambda t: TEAM_ABBR_NORMALIZE.get(t, t))
 
     rows = []
     for _, pick in draft_picks.iterrows():
