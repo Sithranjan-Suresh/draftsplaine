@@ -7,6 +7,8 @@ NFL draft intelligence that reconstructs draft value using rookie-contract EPA, 
 
 ## The Finding
 
+**2026 Draft Preview:** Carnell Tate (WR, pick #4 to Tennessee) is the highest-ceiling pick by expected slot value (76.1 EPA); quarterback is the riskiest rounds 1-2 bet at a 55.2% historical bust rate. Trade-up cost isn't shown — nflverse has no original-team-per-pick field, so we report that honestly as unavailable rather than guess. See `/preview`.
+
 Using EPA from nflverse across 14 draft classes (2012-2025), DraftSpline finds:
 
 - **The 7th-round pick #262 in 2022 — Brock Purdy, "Mr. Irrelevant" — produced 24.48x his slot's expected value.** That's the single largest TDVS in the dataset, larger than every first-round pick in any class we modeled. **We lead with this number and immediately flag why it's contestable**, not just on the player card but directly under the hero stats on the landing page: TDVS doesn't adjust for offensive line quality, receiving talent, or scheme, and Purdy's score is in part a stress-test of that blind spot.
@@ -24,6 +26,7 @@ Every pick is scored by **TDVS (True Draft Value Score)**: the EPA a player actu
 5. **AI Draft Analyst** (`/analyst`) — Groq-backed chat that's grounded in the real TDVS data, not general football knowledge. Every request includes cross-position bust/steal rates; position-specific top-5 steal/bust leaderboards are added automatically when a position is mentioned; entities (player/team/year) are extracted from the question and answer to ground every claim. An explicit guard prevents the model from inventing players, scores, or seasons outside the provided context (verified against a "biggest steal of all time" prompt that previously fabricated pre-2012 players). Responses that mention a player render an inline EPA bar chart. Falls back to `analyst_fallback.json` if Groq is unavailable.
 6. **GM Scorecard** (`/teams`) — all 32 franchises ranked by capital-weighted TDVS, with best/worst-franchise hero cards at the top using the same numbers as the Draft Board's lead claim.
 7. **Methodology page** (`/methodology`) — plain-language writeup of TDVS, the curve-fitting method, and every known limitation, served from `backend/methodology.md`.
+8. **2026 Draft Preview** (`/preview`) — every 2026 pick joined to the same expected-EPA curve used everywhere else in the app, with hero stats (highest-ceiling pick, riskiest rounds 1-2 position bet) and a per-team "expected EPA acquired" bar chart. Players in this class have zero realized NFL seasons, so the partial-data banner reads "slot expectations only" rather than a TDVS score. Trade-up cost is explicitly reported as unavailable rather than estimated, since nflverse has no original-team-per-pick field to detect trades from.
 
 ## Demo Walkthrough
 
@@ -91,6 +94,7 @@ python 05_compute_team_scores.py    # compute final TDVS, team scores, and write
 | `GET /api/team/{abbr}` | One team's full pick-by-pick history |
 | `GET /api/player/{gsis_id}` | Player card with year-by-year EPA |
 | `GET /api/redraft/{year}` / `/api/redraft/{year}/{team}` | Optimized draft order + team value deltas |
+| `GET /api/draft/2026/preview` | 2026 draft class joined to the expected-EPA curve (live `nfl_data_py` pull, falls back to a static CSV) |
 | `POST /api/analyst` | AI analyst question/answer |
 | `GET /api/methodology` | Methodology page content |
 | `GET /health` | Health check |

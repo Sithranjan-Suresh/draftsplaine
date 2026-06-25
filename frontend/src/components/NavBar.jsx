@@ -4,6 +4,7 @@ const LINKS = [
   { to: "/", label: "Draft Board" },
   { to: "/curve", label: "Curve" },
   { to: "/redraft", label: "Redraft" },
+  { to: "/preview", label: "2026 Draft", badge: "NEW" },
   { to: "/analyst", label: "Analyst" },
   { to: "/teams", label: "GM Scorecard" },
   { to: "/methodology", label: "Methodology" },
@@ -52,6 +53,22 @@ export default function NavBar() {
             })}
           >
             {link.label}
+            {link.badge && (
+              <span
+                style={{
+                  marginLeft: 6,
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: "var(--accent)",
+                  border: "1px solid var(--accent-border)",
+                  borderRadius: 4,
+                  padding: "1px 4px",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {link.badge}
+              </span>
+            )}
           </NavLink>
         ))}
       </div>

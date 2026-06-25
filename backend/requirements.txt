@@ -6,3 +6,8 @@ python-dotenv
 httpx
 numpy
 scipy
+# nfl_data_py is normally pipeline-only (see pipeline/pipeline_requirements.txt
+# and methodology.md) -- added here ONLY for the /api/draft/2026/preview live
+# pull, since pre-draft-season data can't be pre-baked into the committed
+# parquets. This is a deliberate, scoped exception to the pipeline-only rule.
+nfl_data_py

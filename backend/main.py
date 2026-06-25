@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from data_loader import load_data
-from routers import analyst, curve, draft, methodology, player, redraft, teams
+from routers import analyst, curve, draft, draft_preview, methodology, player, redraft, teams
 
 load_dotenv()
 
@@ -36,6 +36,7 @@ async def health():
 
 
 app.include_router(draft.router)
+app.include_router(draft_preview.router)
 app.include_router(curve.router)
 app.include_router(teams.router)
 app.include_router(player.router)

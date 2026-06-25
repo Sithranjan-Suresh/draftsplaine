@@ -54,4 +54,8 @@ export async function fetchMethodology() {
   return request(`/api/methodology`);
 }
 
+export async function fetchDraftPreview() {
+  return request(`/api/draft/2026/preview`);
+}
+
 export { BASE_URL };
