@@ -14,10 +14,40 @@ async def get_player(gsis_id: str, request: Request):
     tdvs = data["tdvs"]
     player_epa = data["player_epa"]
     teams = data["teams"]
+    draft_picks = data["draft_picks"]
 
     player_row = tdvs[tdvs["gsis_id"] == gsis_id]
+
     if player_row.empty:
-        raise HTTPException(status_code=404, detail=f"Player '{gsis_id}' not found.")
+        # Not in the TDVS table at all -- either a non-modeled position
+        # (OL/DL/LB/CB/S/K/P/etc.) or outside the modeled draft-year range.
+        # Look the player up in the full draft_picks table instead so we can
+        # still return a card with pick details, just with no TDVS data.
+        pick_row = draft_picks[draft_picks["gsis_id"] == gsis_id]
+        if pick_row.empty:
+            raise HTTPException(status_code=404, detail=f"Player '{gsis_id}' not found.")
+        r = pick_row.iloc[0]
+        team_meta = teams[teams["team_abbr"] == r["team"]]
+        team_name = team_meta.iloc[0]["team_name"] if not team_meta.empty else r["team"]
+        return {
+            "gsis_id": gsis_id,
+            "player_name": r["player_name"],
+            "position": r["position"],
+            "team": r["team"],
+            "team_name": team_name,
+            "draft_year": int(r["draft_year"]),
+            "pick": int(r["pick"]),
+            "round": int(r["round"]),
+            "rookie_epa_total": None,
+            "expected_epa": None,
+            "tdvs": None,
+            "games_played_total": 0,
+            "qualifying": False,
+            "modeled": False,
+            "season_breakdown": [],
+            "data_as_of": data_as_of,
+        }
+
     row = player_row.iloc[0]
 
     draft_year = int(row["draft_year"])
