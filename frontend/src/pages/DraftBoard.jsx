@@ -8,15 +8,67 @@ import PlayerCard from "../components/PlayerCard";
 
 const POSITIONS = ["ALL", "QB", "RB", "WR", "TE"];
 
-// Pre-computed headline stats from the live dataset (2012-2025 pipeline run).
-// Hardcoded rather than fetched live so they render instantly with zero
-// loading flicker -- this is exactly the "lead insight" a cold landing
-// screen needs. Recompute and update these if the pipeline is re-run.
+// Pre-computed headline stats from the live dataset (2012-2025 pipeline run,
+// bust rates computed on the 2012-2022 complete-rookie-window subset for an
+// apples-to-apples comparison). Hardcoded rather than fetched live so they
+// render instantly with zero loading flicker. Recompute if the pipeline reruns.
 const HERO_STATS = [
-  { label: "Most Undervalued Pick (2012-2025)", value: "Brock Purdy", detail: "TDVS 24.48 at pick #262 — \"Mr. Irrelevant\"" },
+  {
+    label: "Most Undervalued Pick (2012-2025)",
+    value: "Brock Purdy",
+    detail: "TDVS 24.48 at pick #262 — but the 49ers' historically strong OL and receiving corps confound this; see caveat below",
+  },
   { label: "Worst Drafting Franchise", value: "New York Jets", detail: "-1,096.9 EPA below expectation, 2012-2025" },
-  { label: "Highest-Bust-Rate Position", value: "Quarterback", detail: "60% of qualifying QB picks miss their slot's expectation" },
+  {
+    label: "Highest-Bust-Rate Position",
+    value: "Quarterback",
+    detail: "55% bust rate vs. 43% RB / 40% WR / 36% TE (TDVS < 0.5, 2012-2022 complete-window classes)",
+  },
 ];
+
+// Bust rate (TDVS < 0.5) by position, 2012-2022 complete-window classes only
+// -- the same apples-to-apples comparison cited in the QB hero stat above,
+// shown visually so the claim is checkable at a glance rather than trusted
+// in isolation.
+const BUST_RATES = [
+  { position: "QB", rate: 55.2 },
+  { position: "RB", rate: 43.1 },
+  { position: "WR", rate: 39.9 },
+  { position: "TE", rate: 35.6 },
+];
+
+function BustRateChart() {
+  const max = Math.max(...BUST_RATES.map((b) => b.rate));
+  return (
+    <div className="card" style={{ padding: 16, marginBottom: 24 }}>
+      <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 10 }}>
+        Bust rate by position (TDVS &lt; 0.5, qualifying picks, 2012-2022 complete rookie windows)
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {BUST_RATES.map((b) => (
+          <div key={b.position} style={{ display: "grid", gridTemplateColumns: "36px 1fr 50px", alignItems: "center", gap: 10 }}>
+            <span className="mono" style={{ fontSize: 12 }}>
+              {b.position}
+            </span>
+            <div style={{ height: 12, background: "var(--bg-elevated)", borderRadius: 4, overflow: "hidden" }}>
+              <div
+                style={{
+                  height: "100%",
+                  width: `${(b.rate / max) * 100}%`,
+                  background: b.position === "QB" ? "var(--bust)" : "var(--neutral)",
+                  borderRadius: 4,
+                }}
+              />
+            </div>
+            <span className="mono" style={{ fontSize: 12, textAlign: "right" }}>
+              {b.rate}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function DraftBoard() {
   const [year, setYear] = useState(2020);
@@ -74,6 +126,27 @@ export default function DraftBoard() {
           </div>
         ))}
       </div>
+
+      <div
+        style={{
+          background: "var(--neutral-dim)",
+          border: "1px solid var(--neutral)",
+          borderRadius: 10,
+          padding: "12px 16px",
+          marginBottom: 24,
+          fontSize: 13,
+          color: "var(--text-primary)",
+          lineHeight: 1.5,
+        }}
+      >
+        <strong>On the Purdy number above:</strong> TDVS measures outcome relative to slot expectation — it does not
+        adjust for offensive line quality, receiving talent, or scheme. Purdy's 24.48 is, in part, a stress-test of
+        the model's biggest blind spot, not a clean claim that he's the best value pick in isolation. We surface
+        this directly rather than only on the player card, because leading with the most contestable number and
+        immediately flagging why it's contestable is more honest than burying the caveat.
+      </div>
+
+      <BustRateChart />
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
         <div>

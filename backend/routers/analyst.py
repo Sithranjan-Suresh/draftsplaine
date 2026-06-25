@@ -38,7 +38,16 @@ SYSTEM_PROMPT = (
     "'no_specific_entity_matched', it means the question didn't reference a specific year, team, or "
     "player you have data for -- use the all_time_leaderboard in the context to answer general "
     "'best/worst ever' questions, and otherwise say plainly that you'd need a specific year, team, "
-    "or player name (within 2012-2025, QB/RB/WR/TE) to look up real numbers."
+    "or player name (within 2012-2025, QB/RB/WR/TE) to look up real numbers. "
+    "The context ALWAYS includes 'cross_position_stats_2012_2022': mean TDVS, bust rate (% with "
+    "TDVS < 0.5), and steal rate (% with TDVS >= 1.2) for each of QB/RB/WR/TE. Use this whenever a "
+    "question is about a position generally ('overrated QB', 'is RB worse than WR', 'which position "
+    "busts most') -- ground your answer in these real rates, never a vague impression. When a "
+    "specific position is mentioned, the context also includes 'position_leaderboards' with the top "
+    "5 steals and top 5 busts for that position specifically -- use these, not the mixed-position "
+    "all_time_leaderboard, when the question names a position. For subjective framings like "
+    "'overrated', interpret it as: a high pick (low pick number) with a low TDVS from that position's "
+    "top_busts list -- a player who cost a lot of capital but underdelivered relative to that cost."
 )
 
 FALLBACK_PATH = Path(__file__).parent.parent / "analyst_fallback.json"
@@ -64,11 +73,61 @@ def find_fallback(question: str):
     return None
 
 
+POSITION_KEYWORDS = {
+    "QB": ["qb", "quarterback", "quarterbacks"],
+    "RB": ["rb", "running back", "running backs", "runningback"],
+    "WR": ["wr", "wide receiver", "wide receivers", "receiver"],
+    "TE": ["te", "tight end", "tight ends"],
+}
+
+
+def compute_position_stats(data: dict) -> dict:
+    """Cross-position bust/steal rates on the 2012-2022 complete-rookie-window
+    subset -- always included in context so the model can answer comparative
+    questions ('is QB more bust-prone than RB?') correctly without that
+    comparison needing to be spelled out in the user's question."""
+    tdvs_all = data["tdvs"]
+    complete = tdvs_all[(tdvs_all["draft_year"] <= 2022) & tdvs_all["qualifying"]]
+    stats = {}
+    for position in ["QB", "RB", "WR", "TE"]:
+        sub = complete[complete["position"] == position]
+        if sub.empty:
+            continue
+        stats[position] = {
+            "n_qualifying": int(len(sub)),
+            "mean_tdvs": round(float(sub["tdvs"].mean()), 2),
+            "bust_rate_pct": round(float((sub["tdvs"] < 0.5).mean() * 100), 1),
+            "steal_rate_pct": round(float((sub["tdvs"] >= 1.2).mean() * 100), 1),
+        }
+    return stats
+
+
 def extract_context(question: str, data: dict) -> dict:
-    """Scan the question for years, team abbreviations, and player names and
-    pull the relevant rows from the in-memory parquets as compact JSON
-    context for the LLM."""
-    context = {}
+    """Scan the question for years, team abbreviations, player names, and
+    position mentions, and pull the relevant rows from the in-memory
+    parquets as compact JSON context for the LLM."""
+    context = {
+        # Always included, regardless of what else matched, so comparative
+        # position questions are grounded even when the question names no
+        # specific player/team/year.
+        "cross_position_stats_2012_2022": compute_position_stats(data),
+    }
+
+    question_lower = question.lower()
+    mentioned_positions = [
+        pos for pos, keywords in POSITION_KEYWORDS.items() if any(kw in question_lower for kw in keywords)
+    ]
+    if mentioned_positions:
+        tdvs_all = data["tdvs"]
+        complete = tdvs_all[(tdvs_all["draft_year"] <= 2022) & tdvs_all["qualifying"]]
+        for position in mentioned_positions:
+            sub = complete[complete["position"] == position].sort_values("tdvs", ascending=False)
+            if sub.empty:
+                continue
+            context.setdefault("position_leaderboards", {})[position] = {
+                "top_steals": sub.head(5)[["player_name", "pick", "draft_year", "tdvs"]].to_dict("records"),
+                "top_busts": sub.tail(5)[["player_name", "pick", "draft_year", "tdvs"]].to_dict("records"),
+            }
 
     years = re.findall(r"\b(19|20)\d{2}\b", question)
     years = [int(y) for y in re.findall(r"\b\d{4}\b", question) if 2012 <= int(y) <= 2022]
@@ -118,7 +177,13 @@ def extract_context(question: str, data: dict) -> dict:
                 }
             )
 
-    if not context:
+    # "specific" here excludes cross_position_stats_2012_2022, which is
+    # always present -- this checks whether the question matched any
+    # particular position, year, team, or player.
+    matched_something_specific = any(
+        key in context for key in ("position_leaderboards", "draft_class", "teams", "players")
+    )
+    if not matched_something_specific:
         # No specific year/team/player was detected in the question (e.g.
         # "biggest steal of all time", "who's the best ever"). Rather than
         # let the LLM invent names and numbers with no grounding, supply the

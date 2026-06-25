@@ -86,6 +86,18 @@ export default function CurveComparison() {
     } this slot by roughly ${ratio}x relative to actual ${positionGroup} production — the widest gap on this curve.`;
   }, [maxDivergence, positionGroup]);
 
+  const ciWidthCallout = useMemo(() => {
+    const early = chartData.find((d) => d.pick === 20);
+    const late = chartData.find((d) => d.pick === 200);
+    if (!early?.ci_band || !late?.ci_band) return null;
+    const earlyWidth = (early.ci_band[1] - early.ci_band[0]).toFixed(2);
+    const lateWidth = (late.ci_band[1] - late.ci_band[0]).toFixed(2);
+    const growth = (late.ci_band[1] - late.ci_band[0]) / (early.ci_band[1] - early.ci_band[0]);
+    return `The shaded 90% confidence band (right axis units) is ${earlyWidth} wide at pick #20 and grows to ${lateWidth} at pick #200 — ${growth.toFixed(
+      1
+    )}x wider. That's not a smoothing failure; it's an honest signal that there are far fewer qualifying ${positionGroup} picks per slot in rounds 5-7 to estimate from.`;
+  }, [chartData, positionGroup]);
+
   return (
     <div>
       <h1 style={{ fontSize: 28, marginBottom: 4 }}>Draft Value Curve Comparison</h1>
@@ -124,7 +136,13 @@ export default function CurveComparison() {
               <YAxis stroke="var(--text-muted)" fontSize={11} />
               <Tooltip content={<ChartTooltip />} />
               <Legend
-                formatter={(value) => (value === "chase" ? "Traditional Draft Chart" : "DraftSpline EPA Curve")}
+                formatter={(value) =>
+                  value === "chase"
+                    ? "Traditional Draft Chart"
+                    : value === "draftspline"
+                    ? "DraftSpline EPA Curve"
+                    : "90% Confidence Interval"
+                }
               />
               {ROUND_BOUNDARIES.map((b) => (
                 <ReferenceLine key={b} x={b} stroke="var(--bg-border)" strokeDasharray="2 2" />
@@ -137,7 +155,15 @@ export default function CurveComparison() {
                   label={{ value: "Max divergence", fill: "var(--neutral)", fontSize: 10, position: "top" }}
                 />
               )}
-              <Area dataKey="ci_band" stroke="none" fill="var(--accent-dim)" isAnimationActive={false} />
+              <Area
+                dataKey="ci_band"
+                name="ci_band"
+                stroke="var(--accent-border)"
+                strokeWidth={1}
+                fill="var(--accent-dim)"
+                fillOpacity={1}
+                isAnimationActive={false}
+              />
               <Line dataKey="chase" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} />
               <Line dataKey="draftspline" stroke="var(--accent)" strokeWidth={2.5} dot={false} />
             </ComposedChart>
@@ -158,6 +184,22 @@ export default function CurveComparison() {
           }}
         >
           {divergenceCallout}
+        </div>
+      )}
+
+      {ciWidthCallout && (
+        <div
+          style={{
+            background: "var(--accent-dim)",
+            border: "1px solid var(--accent-border)",
+            borderRadius: 10,
+            padding: "12px 16px",
+            marginTop: 10,
+            fontSize: 13,
+            color: "var(--text-primary)",
+          }}
+        >
+          {ciWidthCallout}
         </div>
       )}
     </div>
