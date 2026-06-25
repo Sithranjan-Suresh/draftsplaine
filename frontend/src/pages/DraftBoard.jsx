@@ -259,7 +259,7 @@ export default function DraftBoard() {
           <AnimatePresence initial={false}>
             {sortedPicks.map((p) => (
               <motion.div
-                key={p.gsis_id}
+                key={p.gsis_id || `pick-${p.pick}`}
                 layout={!prefersReducedMotion}
                 transition={
                   prefersReducedMotion
@@ -278,7 +278,7 @@ export default function DraftBoard() {
                   modeled={p.modeled}
                   rookieEpaTotal={p.rookie_epa_total}
                   expectedEpa={p.expected_epa}
-                  onClick={() => setSelectedPlayer(p)}
+                  onClick={() => p.gsis_id && setSelectedPlayer(p)}
                 />
               </motion.div>
             ))}

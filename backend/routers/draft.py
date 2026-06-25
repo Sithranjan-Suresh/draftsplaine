@@ -52,7 +52,7 @@ async def get_draft_class(year: int, request: Request):
                 "expected_epa": float(row["expected_epa"]) if pd.notna(row.get("expected_epa")) else None,
                 "qualifying": qualifying,
                 "modeled": modeled,
-                "gsis_id": row["gsis_id"],
+                "gsis_id": row["gsis_id"] if pd.notna(row.get("gsis_id")) else None,
             }
         )
 
