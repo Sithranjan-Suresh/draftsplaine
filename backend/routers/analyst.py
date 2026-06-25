@@ -1,3 +1,153 @@
-from fastapi import APIRouter
+import json
+import os
+import re
+from pathlib import Path
+
+import httpx
+import pandas as pd
+from fastapi import APIRouter, Request
+from pydantic import BaseModel
 
 router = APIRouter()
+
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+GROQ_MODEL = "llama-3.1-8b-instant"
+GROQ_TIMEOUT = 10.0
+
+SYSTEM_PROMPT = (
+    "You are DraftSpline, an NFL draft analytics assistant. You answer questions about NFL "
+    "draft history using TDVS (True Draft Value Score) data, which measures how much value a "
+    "player produced during their rookie contract relative to what was expected at their draft "
+    "slot. Keep answers under 150 words. Always cite specific numbers (TDVS scores, EPA values, "
+    "pick numbers) when available. If you don't have data for a player or class, say so "
+    "honestly. Do not discuss topics unrelated to NFL draft analytics. If asked something "
+    "offensive or off-topic, redirect with: \"I'm focused on NFL draft analytics — let me know "
+    "if you have a draft-related question.\""
+)
+
+FALLBACK_PATH = Path(__file__).parent.parent / "analyst_fallback.json"
+with open(FALLBACK_PATH, "r", encoding="utf-8") as f:
+    FALLBACK_DATA = json.load(f)
+
+
+class AnalystRequest(BaseModel):
+    question: str
+
+
+def find_fallback(question: str):
+    q_lower = question.lower()
+    best_match = None
+    best_score = 0
+    for entry in FALLBACK_DATA.get("questions", []):
+        score = sum(1 for kw in entry["keywords"] if kw.lower() in q_lower)
+        if score > best_score:
+            best_score = score
+            best_match = entry
+    if best_match and best_score > 0:
+        return best_match["answer"]
+    return None
+
+
+def extract_context(question: str, data: dict) -> dict:
+    """Scan the question for years, team abbreviations, and player names and
+    pull the relevant rows from the in-memory parquets as compact JSON
+    context for the LLM."""
+    context = {}
+
+    years = re.findall(r"\b(19|20)\d{2}\b", question)
+    years = [int(y) for y in re.findall(r"\b\d{4}\b", question) if 2012 <= int(y) <= 2022]
+    if years:
+        year = years[0]
+        tdvs = data["tdvs"]
+        class_df = tdvs[(tdvs["draft_year"] == year) & tdvs["qualifying"]].sort_values("tdvs", ascending=False)
+        if not class_df.empty:
+            context["draft_class"] = {
+                "year": year,
+                "mean_tdvs": round(float(class_df["tdvs"].mean()), 2),
+                "top_steals": class_df.head(3)[["player_name", "pick", "tdvs"]].to_dict("records"),
+                "top_busts": class_df.tail(3)[["player_name", "pick", "tdvs"]].to_dict("records"),
+            }
+
+    teams_df = data["teams"]
+    tdvs_all = data["tdvs"]
+    for _, team_row in teams_df.iterrows():
+        abbr = team_row["team_abbr"]
+        if re.search(rf"\b{abbr}\b", question) or (
+            isinstance(team_row.get("team_name"), str) and team_row["team_name"].lower() in question.lower()
+        ):
+            team_scores = data["team_scores"]
+            team_seasons = team_scores[team_scores["team"] == abbr]
+            context.setdefault("teams", []).append(
+                {
+                    "team": abbr,
+                    "team_name": team_row.get("team_name", abbr),
+                    "weighted_tdvs_avg": round(float(team_seasons["weighted_tdvs"].dropna().mean()), 2)
+                    if team_seasons["weighted_tdvs"].notna().any()
+                    else None,
+                }
+            )
+
+    name_tokens = re.findall(r"[A-Z][a-z]+(?:\s[A-Z][a-z]+)+", question)
+    for name in name_tokens:
+        match = tdvs_all[tdvs_all["player_name"].str.lower() == name.lower()]
+        if not match.empty:
+            r = match.iloc[0]
+            context.setdefault("players", []).append(
+                {
+                    "player_name": r["player_name"],
+                    "pick": int(r["pick"]),
+                    "draft_year": int(r["draft_year"]),
+                    "tdvs": float(r["tdvs"]) if pd.notna(r["tdvs"]) else None,
+                    "qualifying": bool(r["qualifying"]),
+                }
+            )
+
+    return context
+
+
+@router.post("/api/analyst")
+async def post_analyst(req: AnalystRequest, request: Request):
+    data = request.app.state.data
+    question = req.question.strip()
+
+    if not question:
+        return {"answer": "Please enter a question.", "data_points": [], "cached": False}
+
+    context = extract_context(question, data)
+    api_key = os.getenv("GROQ_API_KEY")
+
+    if api_key:
+        try:
+            messages = [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": f"{question}\n\nContext:\n{json.dumps(context, default=str)}",
+                },
+            ]
+            async with httpx.AsyncClient(timeout=GROQ_TIMEOUT) as client:
+                response = await client.post(
+                    GROQ_URL,
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    json={"model": GROQ_MODEL, "messages": messages, "max_tokens": 400},
+                )
+            if response.status_code == 200:
+                body = response.json()
+                answer = body["choices"][0]["message"]["content"]
+                data_points = []
+                for player in context.get("players", []):
+                    data_points.append(player)
+                return {"answer": answer, "data_points": data_points, "cached": False}
+            print(f"Groq returned non-200: {response.status_code} {response.text[:300]}")
+        except Exception as e:  # noqa: BLE001
+            print(f"Groq call failed: {e}")
+
+    fallback_answer = find_fallback(question)
+    if fallback_answer:
+        return {"answer": fallback_answer, "data_points": [], "cached": True}
+
+    return {
+        "answer": "Analyst temporarily unavailable. Please try again.",
+        "data_points": [],
+        "cached": False,
+    }
