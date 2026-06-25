@@ -2,8 +2,8 @@
 
 NFL draft intelligence that reconstructs draft value using rookie-contract EPA, instead of career reputation or static trade charts.
 
-**Live URL:** _deploy to Vercel and paste the URL here_
-**API URL:** _deploy to Render and paste the URL here_
+**Live URL:** https://draftsplaine.vercel.app
+**API URL:** https://draftsplaine.onrender.com
 
 ## The Finding
 
@@ -19,7 +19,8 @@ Every pick is scored by **TDVS (True Draft Value Score)**: the EPA a player actu
 
 ## Features
 
-1. **TDVS Draft Board** (`/`) — every pick in a selected class (2012-2025), toggleable between pick order and TDVS ranking with an animated reorder. Defaults to hiding unmodeled positions (OL/DL/LB/CB/S/K/P) with a count and a toggle to reveal them; includes a player-name search box and position filter tabs. Shows three hero stats and the cross-position bust-rate chart on load. Recent classes (2023-2025) carry a partial-data banner since their rookie windows haven't completed.
+0. **Landing page** (`/`) — a single case-file-style page built around the project's boldest claim: Purdy's 24.48x TDVS, shown with the same outlier caveat used everywhere else in the app, plus three supporting headline stats and one CTA into the Draft Board.
+1. **TDVS Draft Board** (`/board`) — every pick in a selected class (2012-2025), toggleable between pick order and TDVS ranking with an animated reorder. Defaults to hiding unmodeled positions (OL/DL/LB/CB/S/K/P) with a count and a toggle to reveal them; includes a player-name search box and position filter tabs. Shows three hero stats and the cross-position bust-rate chart on load. Recent classes (2023-2025) carry a partial-data banner since their rookie windows haven't completed.
 2. **Player drill-down** — click any pick to open a modal with year-by-year EPA bars, an auto-generated one-sentence verdict, a limitation caveat on any outlier score (TDVS ≥ 5), and a deep-link into the Redraft Simulator for that class.
 3. **Draft Value Curve Comparison** (`/curve`) — the traditional Stuart Chase chart vs. DraftSpline's per-position EPA curve (Nadaraya-Watson kernel smoothing + isotonic regression), both normalized to pick #1 = 1.0. The 90% confidence band is labeled in the legend, and two dynamic callouts state the exact pick-number divergence and the exact CI-width growth from early to late rounds — not just a visual that's left to speak for itself.
 4. **Redraft Simulator** (`/redraft`) — re-orders a class by TDVS and shows original vs. optimized order with hover-linked rows and a per-team value-delta bar chart. Restricted to 2012-2022 classes (complete rookie windows only): small-sample noise in incomplete classes combined with RB's near-zero EPA baseline produced implausible "best picks ever" results, so the fix is to restrict the input rather than clamp the output. Carries an inline disclaimer that it ranks by value, not team need or fit.
@@ -30,7 +31,7 @@ Every pick is scored by **TDVS (True Draft Value Score)**: the EPA a player actu
 
 ## Demo Walkthrough
 
-1. **Draft Board** (`/`) — opens on the 2020 class. The hero stats and bust-rate chart are the lead claims above. Toggle "Pick Order" ↔ "TDVS Ranking" — Jordan Love (pick #26) and Justin Herbert (pick #6) jump ahead of Joe Burrow (pick #1) despite being picked later.
+1. **Draft Board** (`/board`) — opens on the 2020 class. The hero stats and bust-rate chart are the lead claims above. Toggle "Pick Order" ↔ "TDVS Ranking" — Jordan Love (pick #26) and Justin Herbert (pick #6) jump ahead of Joe Burrow (pick #1) despite being picked later.
 2. **Click any player row** — opens the drill-down with the year-by-year EPA chart and a "View in Redraft Simulator" link.
 3. **Curve Comparison** (`/curve`) — toggle position groups and read both dynamic callouts below the chart.
 4. **Redraft Simulator** (`/redraft`) — select 2020, click "Rebuild Draft," and watch ~90% of picks reorder. Read the inline disclaimer first.
