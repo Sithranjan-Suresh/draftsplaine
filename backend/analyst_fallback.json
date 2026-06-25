@@ -1,0 +1,24 @@
+{
+  "questions": [
+    {
+      "keywords": ["2020", "draft class", "good", "bad", "overall"],
+      "answer": "The 2020 class graded well above average, with a mean TDVS of 1.80 across qualifying picks. The headline story is Jalen Hurts at pick 53 (TDVS 7.25) and Justin Herbert at pick 6 (TDVS 6.73) massively outperforming slot expectations, while Joe Burrow at pick 1 (TDVS 6.35) also delivered. On the bust side, Joshua Kelley (pick 112) and Antonio Gibson (pick 66) underperformed their slots. Overall this class supports the thesis that mid-round value is systematically available if teams know where to look."
+    },
+    {
+      "keywords": ["biggest", "steal", "since 2018", "best value"],
+      "answer": "The biggest TDVS steal since 2018 is Brock Purdy -- the literal last pick of the 2022 draft (#262, 'Mr. Irrelevant') -- with a TDVS of 16.74. Lamar Jackson at pick 32 in 2018 (TDVS 12.11) and Jalen Hurts at pick 53 in 2020 (TDVS 7.25) round out the top tier. All three were picked outside the range traditional draft charts treat as premium value, which is exactly the mispricing DraftSpline is built to surface."
+    },
+    {
+      "keywords": ["mahomes", "best value", "2017", "patrick mahomes"],
+      "answer": "Yes -- Patrick Mahomes was the best value pick of the 2017 class by a wide margin. At pick 10 he posted a TDVS of 19.19, the highest qualifying score in that entire draft class. Deshaun Watson (pick 12, TDVS 8.24) and Alvin Kamara (pick 67, TDVS 8.62) were also strong values, but Mahomes' rookie-contract production relative to a top-10 slot expectation is the standout result in our model."
+    },
+    {
+      "keywords": ["best team", "drafting", "last 10 years", "best at drafting", "best gm"],
+      "answer": "Kansas City has been the best drafting organization over the modeled period, with a capital-weighted mean TDVS of 3.13 across their draft classes 2012-2022 -- ahead of New Orleans (3.11) and Dallas (2.90). The weighting accounts for the fact that early-round value matters more in capital terms than late-round value, so this isn't just a function of hitting on a few cheap picks."
+    },
+    {
+      "keywords": ["running back", "rb", "overdraft", "overdrafting", "why"],
+      "answer": "Running backs are a structurally tricky position for draft value: across qualifying RBs in our dataset, mean TDVS sits right at 0.99 -- essentially break-even -- with only 47% of qualifying RBs beating their slot expectation. The deeper issue is that rush EPA per play is typically negative league-wide even for elite backs (Saquon Barkley's seasonal total EPA has been negative in 4 of his first 6 seasons), so the position's *ceiling* relative to draft capital spent is lower than skill positions like WR. Teams that draft RBs early are paying a premium for a position where the median outcome barely clears the expectation bar."
+    }
+  ]
+}
