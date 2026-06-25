@@ -43,12 +43,30 @@ def compute_tdvs() -> pd.DataFrame:
         how="left",
     )
 
+    # TDVS stabilization floor: rush EPA is structurally negative even for
+    # elite RBs (this is a genuine, well-documented analytics finding, not a
+    # pipeline bug -- see methodology.md). That means expected_epa for RB,
+    # and occasionally for other positions in sparse rounds, can be zero or
+    # negative. A literal actual/expected ratio is undefined or explodes
+    # near zero in that regime. We use a formula that is mathematically
+    # identical to the literal ratio whenever expected_epa exceeds the
+    # floor, and smoothly continues below it as 1 + (actual-expected)/floor
+    # -- continuous at expected_epa == floor, well-behaved for negative
+    # expected_epa, and preserves the same TDVS=1.0 "met expectation"
+    # semantics everywhere.
+    TDVS_FLOOR = 15.0
+
     def calc_row(row):
         expected = row["expected_epa"]
         qualifying = row["qualifying"]
-        if pd.isna(expected) or expected <= 0:
+        if pd.isna(expected):
             return pd.Series({"tdvs": np.nan, "qualifying": False, "expected_epa": expected})
-        tdvs = round(row["rookie_epa_total"] / expected, 2)
+        actual = row["rookie_epa_total"]
+        if expected > TDVS_FLOOR:
+            tdvs = actual / expected
+        else:
+            tdvs = 1.0 + (actual - expected) / TDVS_FLOOR
+        tdvs = round(tdvs, 2)
         return pd.Series({"tdvs": tdvs, "qualifying": qualifying, "expected_epa": round(expected, 1)})
 
     results = merged.apply(calc_row, axis=1)
