@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, ReferenceLine, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
+import { BarChart, Bar, Cell, XAxis, YAxis, ReferenceLine, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
 import usePlayer from "../hooks/usePlayer";
 import TeamLogo from "./TeamLogo";
 import TDVSBadge from "./TDVSBadge";
@@ -102,7 +102,7 @@ export default function PlayerCard({ gsisId, onClose }) {
                     )}
                     <Bar dataKey="total_epa" radius={[4, 4, 0, 0]}>
                       {data.season_breakdown.map((d, i) => (
-                        <Bar key={i} fill={d.total_epa >= 0 ? "var(--steal)" : "var(--bust)"} />
+                        <Cell key={i} fill={d.total_epa >= 0 ? "var(--steal)" : "var(--bust)"} />
                       ))}
                     </Bar>
                   </BarChart>
