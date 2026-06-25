@@ -85,9 +85,8 @@ export default function RedraftSimulator() {
 
       <div
         style={{
-          background: "var(--neutral-dim)",
-          border: "1px solid var(--neutral)",
-          borderRadius: 10,
+          background: "var(--bg-elevated)",
+          borderLeft: "3px solid var(--highlight)",
           padding: "12px 16px",
           marginBottom: 16,
           fontSize: 13,
@@ -105,6 +104,7 @@ export default function RedraftSimulator() {
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 20, flexWrap: "wrap" }}>
         <DraftClassSelector year={year} onChange={setYear} maxYear={LAST_COMPLETE_WINDOW_YEAR} />
         <input
+          className="mono"
           placeholder="Team abbr (optional, e.g. CIN)"
           value={team}
           onChange={(e) => setTeam(e.target.value.toUpperCase())}
@@ -112,39 +112,41 @@ export default function RedraftSimulator() {
             background: "var(--bg-elevated)",
             color: "var(--text-primary)",
             border: "1px solid var(--bg-border)",
-            borderRadius: 8,
+            borderRadius: 2,
             padding: "8px 12px",
             fontSize: 13,
             width: 200,
           }}
         />
         <button
+          className="mono"
           onClick={() => handleRebuild()}
           style={{
-            background: "var(--accent)",
+            background: "var(--ink)",
             color: "var(--bg-base)",
             border: "none",
-            borderRadius: 8,
+            borderRadius: 2,
             padding: "9px 18px",
-            fontSize: 14,
-            fontWeight: 600,
+            fontSize: 13,
+            fontWeight: 700,
           }}
         >
-          Rebuild Draft
+          Rebuild draft
         </button>
         {simResult && (
           <button
+            className="mono"
             onClick={handleReset}
             style={{
               background: "transparent",
               color: "var(--text-muted)",
               border: "1px solid var(--bg-border)",
-              borderRadius: 8,
+              borderRadius: 2,
               padding: "9px 18px",
-              fontSize: 14,
+              fontSize: 13,
             }}
           >
-            Reset to Original
+            Reset to original
           </button>
         )}
       </div>
@@ -157,7 +159,7 @@ export default function RedraftSimulator() {
           <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 12 }}>
             {simResult.excluded_count} picks excluded from reordering due to insufficient data.
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 28 }}>
+          <div className="hero-grid-2" style={{ marginBottom: 28 }}>
             <div>
               <h3 style={{ fontSize: 14, color: "var(--text-muted)", marginBottom: 8 }}>Original Order</h3>
               <div className="card" style={{ maxHeight: 480, overflowY: "auto" }}>
@@ -209,13 +211,12 @@ export default function RedraftSimulator() {
                     <TeamLogo teamAbbr={td.team} size={24} />
                     <span style={{ fontSize: 13 }}>{td.team}</span>
                     {td.delta !== null ? (
-                      <div style={{ height: 14, background: "var(--bg-elevated)", borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ height: 14, background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", overflow: "hidden" }}>
                         <div
                           style={{
                             height: "100%",
                             width: `${barWidthPct}%`,
                             background: td.delta >= 0 ? "var(--steal)" : "var(--bust)",
-                            borderRadius: 4,
                             transition: "width 0.3s ease",
                           }}
                         />

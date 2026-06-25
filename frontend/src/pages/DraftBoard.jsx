@@ -37,30 +37,31 @@ const BUST_RATES = [
   { position: "TE", rate: 35.6 },
 ];
 
+const POS_BAR_COLOR = { QB: "var(--pos-qb)", RB: "var(--pos-rb)", WR: "var(--pos-wr)", TE: "var(--pos-te)" };
+
 function BustRateChart() {
   const max = Math.max(...BUST_RATES.map((b) => b.rate));
   return (
-    <div className="card" style={{ padding: 16, marginBottom: 24 }}>
-      <div style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 10 }}>
-        Bust rate by position (TDVS &lt; 0.5, qualifying picks, 2012-2022 complete rookie windows)
+    <div className="card" style={{ padding: 18, marginBottom: 24 }}>
+      <div className="eyebrow" style={{ marginBottom: 12 }}>
+        Bust rate by position — TDVS &lt; 0.5, qualifying picks, 2012-2022 complete rookie windows
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
         {BUST_RATES.map((b) => (
           <div key={b.position} style={{ display: "grid", gridTemplateColumns: "36px 1fr 50px", alignItems: "center", gap: 10 }}>
-            <span className="mono" style={{ fontSize: 12 }}>
+            <span className="mono" style={{ fontSize: 12, fontWeight: 700, color: POS_BAR_COLOR[b.position] }}>
               {b.position}
             </span>
-            <div style={{ height: 12, background: "var(--bg-elevated)", borderRadius: 4, overflow: "hidden" }}>
+            <div style={{ height: 13, background: "var(--bg-elevated)", border: "1px solid var(--bg-border)", overflow: "hidden" }}>
               <div
                 style={{
                   height: "100%",
                   width: `${(b.rate / max) * 100}%`,
-                  background: b.position === "QB" ? "var(--bust)" : "var(--neutral)",
-                  borderRadius: 4,
+                  background: POS_BAR_COLOR[b.position],
                 }}
               />
             </div>
-            <span className="mono" style={{ fontSize: 12, textAlign: "right" }}>
+            <span className="mono" style={{ fontSize: 12, textAlign: "right", fontWeight: 600 }}>
               {b.rate}%
             </span>
           </div>
@@ -111,27 +112,40 @@ export default function DraftBoard() {
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 24 }}>
-        {HERO_STATS.map((stat) => (
-          <div key={stat.label} className="card" style={{ padding: 16 }}>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-              {stat.label}
+      <div className="memo-block" style={{ marginBottom: 24 }}>
+        <div className="eyebrow" style={{ marginBottom: 14 }}>Scouting memo — class-independent headlines</div>
+        <div className="hero-grid">
+          {HERO_STATS.map((stat) => (
+            <div key={stat.label} className="card" style={{ padding: 16 }}>
+              <div className="eyebrow" style={{ marginBottom: 8 }}>{stat.label}</div>
+              <div
+                className="mono"
+                style={{
+                  fontWeight: 700,
+                  fontSize: 19,
+                  color: stat.value === "Brock Purdy" ? "var(--highlight)" : "var(--ink)",
+                  marginBottom: 6,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  flexWrap: "wrap",
+                }}
+              >
+                {stat.value}
+                {stat.value === "Brock Purdy" && <span className="grade-stamp">Outlier — unadjusted</span>}
+              </div>
+              <div style={{ fontSize: 12.5, color: "var(--text-muted)", lineHeight: 1.5 }}>
+                {stat.detail}
+              </div>
             </div>
-            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, color: "var(--accent)", marginBottom: 4 }}>
-              {stat.value}
-            </div>
-            <div className="mono" style={{ fontSize: 12, color: "var(--text-primary)" }}>
-              {stat.detail}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       <div
         style={{
-          background: "var(--neutral-dim)",
-          border: "1px solid var(--neutral)",
-          borderRadius: 10,
+          background: "var(--bg-elevated)",
+          borderLeft: "3px solid var(--bust)",
           padding: "12px 16px",
           marginBottom: 24,
           fontSize: 13,
@@ -139,7 +153,7 @@ export default function DraftBoard() {
           lineHeight: 1.5,
         }}
       >
-        <strong>On the Purdy number above:</strong> TDVS measures outcome relative to slot expectation — it does not
+        <strong style={{ color: "var(--bust)" }}>On the Purdy number above:</strong> TDVS measures outcome relative to slot expectation — it does not
         adjust for offensive line quality, receiving talent, or scheme. Purdy's 24.48 is, in part, a stress-test of
         the model's biggest blind spot, not a clean claim that he's the best value pick in isolation. We surface
         this directly rather than only on the player card, because leading with the most contestable number and
@@ -157,6 +171,7 @@ export default function DraftBoard() {
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
           <input
+            className="mono"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search player..."
@@ -164,7 +179,7 @@ export default function DraftBoard() {
               background: "var(--bg-elevated)",
               color: "var(--text-primary)",
               border: "1px solid var(--bg-border)",
-              borderRadius: 8,
+              borderRadius: 2,
               padding: "8px 12px",
               fontSize: 13,
               width: 160,
@@ -172,18 +187,19 @@ export default function DraftBoard() {
           />
           <DraftClassSelector year={year} onChange={setYear} />
           <button
+            className="mono"
             onClick={() => setSortMode(sortMode === "pick" ? "tdvs" : "pick")}
             style={{
-              background: sortMode === "tdvs" ? "var(--accent-dim)" : "var(--bg-elevated)",
-              color: sortMode === "tdvs" ? "var(--accent)" : "var(--text-primary)",
-              border: `1px solid ${sortMode === "tdvs" ? "var(--accent-border)" : "var(--bg-border)"}`,
-              borderRadius: 8,
+              background: sortMode === "tdvs" ? "var(--neutral-dim)" : "var(--bg-elevated)",
+              color: sortMode === "tdvs" ? "var(--highlight)" : "var(--text-primary)",
+              border: `1px solid ${sortMode === "tdvs" ? "var(--highlight)" : "var(--bg-border)"}`,
+              borderRadius: 2,
               padding: "8px 16px",
-              fontSize: 14,
-              fontWeight: 500,
+              fontSize: 13,
+              fontWeight: 600,
             }}
           >
-            {sortMode === "pick" ? "Pick Order" : "TDVS Ranking"} — click to flip
+            {sortMode === "pick" ? "Pick order" : "TDVS ranking"} — click to flip
           </button>
         </div>
       </div>
@@ -192,14 +208,16 @@ export default function DraftBoard() {
         {POSITIONS.map((pos) => (
           <button
             key={pos}
+            className="mono"
             onClick={() => setPositionFilter(pos)}
             style={{
               background: positionFilter === pos ? "var(--accent-dim)" : "transparent",
               color: positionFilter === pos ? "var(--accent)" : "var(--text-muted)",
               border: `1px solid ${positionFilter === pos ? "var(--accent-border)" : "var(--bg-border)"}`,
-              borderRadius: 6,
+              borderRadius: 2,
               padding: "4px 12px",
-              fontSize: 13,
+              fontSize: 12.5,
+              fontWeight: 600,
             }}
           >
             {pos}

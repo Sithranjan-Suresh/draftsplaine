@@ -51,34 +51,50 @@ export default function GMScorecard() {
       </p>
 
       {best && worst && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
-          <div className="card" style={{ padding: 16, borderColor: "var(--steal)" }}>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 6 }}>
-              Best Drafting Franchise
+        <div className="hero-grid-2" style={{ marginBottom: 20 }}>
+          <div
+            className="card"
+            style={{
+              padding: "16px 18px",
+              borderColor: "var(--steal)",
+              borderWidth: "1px 1px 1px 3px",
+              clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)",
+            }}
+          >
+            <div className="eyebrow" style={{ color: "var(--steal)", marginBottom: 8 }}>
+              Case file — best drafting franchise
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <TeamLogo teamAbbr={best.team} size={32} />
               <div>
-                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--steal)" }}>
+                <div className="mono" style={{ fontWeight: 700, fontSize: 17, color: "var(--ink)" }}>
                   {best.team_name || best.team}
                 </div>
-                <div className="mono" style={{ fontSize: 12, color: "var(--text-primary)" }}>
-                  {formatEPA(best.epa_vs_expected)} EPA above expectation
+                <div className="mono" style={{ fontSize: 12, color: "var(--steal)", fontWeight: 600 }}>
+                  +{formatEPA(best.epa_vs_expected).replace("+", "").replace("-", "")} EPA above expectation
                 </div>
               </div>
             </div>
           </div>
-          <div className="card" style={{ padding: 16, borderColor: "var(--bust)" }}>
-            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 6 }}>
-              Worst Drafting Franchise
+          <div
+            className="card"
+            style={{
+              padding: "16px 18px",
+              borderColor: "var(--bust)",
+              borderWidth: "1px 1px 1px 3px",
+              clipPath: "polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%)",
+            }}
+          >
+            <div className="eyebrow" style={{ color: "var(--bust)", marginBottom: 8 }}>
+              Case file — worst drafting franchise
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <TeamLogo teamAbbr={worst.team} size={32} />
               <div>
-                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--bust)" }}>
+                <div className="mono" style={{ fontWeight: 700, fontSize: 17, color: "var(--ink)" }}>
                   {worst.team_name || worst.team}
                 </div>
-                <div className="mono" style={{ fontSize: 12, color: "var(--text-primary)" }}>
+                <div className="mono" style={{ fontSize: 12, color: "var(--bust)", fontWeight: 600 }}>
                   {formatEPA(worst.epa_vs_expected)} EPA below expectation
                 </div>
               </div>
@@ -98,12 +114,11 @@ export default function GMScorecard() {
                 {COLUMNS.map((col) => (
                   <th
                     key={col.key}
+                    className="mono eyebrow"
                     onClick={() => toggleSort(col.key)}
                     style={{
                       textAlign: "left",
                       padding: "10px 14px",
-                      fontSize: 12,
-                      color: "var(--text-muted)",
                       cursor: "pointer",
                       userSelect: "none",
                     }}

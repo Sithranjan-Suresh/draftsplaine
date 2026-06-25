@@ -135,14 +135,15 @@ export default function Analyst() {
               {STARTER_QUESTIONS.map((q) => (
                 <button
                   key={q}
+                  className="mono"
                   onClick={() => setInput(q)}
                   style={{
                     background: "var(--bg-elevated)",
                     color: "var(--text-primary)",
                     border: "1px solid var(--bg-border)",
-                    borderRadius: 8,
+                    borderRadius: 2,
                     padding: "8px 12px",
-                    fontSize: 12,
+                    fontSize: 11.5,
                     textAlign: "left",
                   }}
                 >
@@ -159,7 +160,8 @@ export default function Analyst() {
               style={{
                 maxWidth: "75%",
                 background: m.role === "user" ? "var(--accent-dim)" : "var(--bg-elevated)",
-                borderRadius: 12,
+                borderLeft: `3px solid ${m.role === "user" ? "var(--accent)" : "var(--bg-border)"}`,
+                borderRadius: 2,
                 padding: "10px 14px",
                 fontSize: 14,
                 lineHeight: 1.5,
@@ -223,22 +225,23 @@ export default function Analyst() {
             background: "var(--bg-elevated)",
             color: "var(--text-primary)",
             border: "1px solid var(--bg-border)",
-            borderRadius: 10,
+            borderRadius: 2,
             padding: "10px 14px",
             fontSize: 14,
           }}
         />
         <button
+          className="mono"
           onClick={() => send(input)}
           disabled={!input.trim() || loading || sessionFull}
           style={{
-            background: input.trim() && !loading && !sessionFull ? "var(--accent)" : "var(--bg-elevated)",
+            background: input.trim() && !loading && !sessionFull ? "var(--ink)" : "var(--bg-elevated)",
             color: input.trim() && !loading && !sessionFull ? "var(--bg-base)" : "var(--text-muted)",
             border: "none",
-            borderRadius: 10,
+            borderRadius: 2,
             padding: "0 20px",
-            fontSize: 14,
-            fontWeight: 600,
+            fontSize: 13,
+            fontWeight: 700,
           }}
         >
           Send

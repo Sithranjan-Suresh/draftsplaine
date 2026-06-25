@@ -3,14 +3,13 @@ export default function ErrorBanner({ message }) {
     <div
       style={{
         background: "var(--bust-dim)",
-        border: "1px solid var(--bust)",
-        borderRadius: 10,
+        borderLeft: "3px solid var(--bust)",
         padding: "14px 18px",
         color: "var(--text-primary)",
         fontSize: 14,
       }}
     >
-      <strong style={{ color: "var(--bust)" }}>Error: </strong>
+      <strong className="mono" style={{ color: "var(--bust)" }}>Error: </strong>
       {message || "Something went wrong."}
     </div>
   );

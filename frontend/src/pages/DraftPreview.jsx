@@ -111,9 +111,8 @@ export default function DraftPreview() {
     <div>
       <div
         style={{
-          background: "var(--neutral-dim)",
-          border: "1px solid var(--neutral)",
-          borderRadius: 10,
+          background: "var(--bg-elevated)",
+          borderLeft: "3px solid var(--highlight)",
           padding: "12px 16px",
           marginBottom: 20,
           fontSize: 13,
@@ -126,7 +125,7 @@ export default function DraftPreview() {
       </div>
 
       {heroStats && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 24 }}>
+        <div className="hero-grid" style={{ marginBottom: 24 }}>
           <div className="card" style={{ padding: 16 }}>
             <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6, textTransform: "uppercase" }}>
               Highest-Ceiling Pick
@@ -187,18 +186,19 @@ export default function DraftPreview() {
           </p>
         </div>
         <button
+          className="mono"
           onClick={() => setSortMode(sortMode === "pick" ? "epa" : "pick")}
           style={{
-            background: sortMode === "epa" ? "var(--accent-dim)" : "var(--bg-elevated)",
-            color: sortMode === "epa" ? "var(--accent)" : "var(--text-primary)",
-            border: `1px solid ${sortMode === "epa" ? "var(--accent-border)" : "var(--bg-border)"}`,
-            borderRadius: 8,
+            background: sortMode === "epa" ? "var(--neutral-dim)" : "var(--bg-elevated)",
+            color: sortMode === "epa" ? "var(--highlight)" : "var(--text-primary)",
+            border: `1px solid ${sortMode === "epa" ? "var(--highlight)" : "var(--bg-border)"}`,
+            borderRadius: 2,
             padding: "8px 16px",
-            fontSize: 14,
-            fontWeight: 500,
+            fontSize: 13,
+            fontWeight: 600,
           }}
         >
-          {sortMode === "pick" ? "Pick Order" : "Expected EPA"} — click to flip
+          {sortMode === "pick" ? "Pick order" : "Expected EPA"} — click to flip
         </button>
       </div>
 
@@ -206,14 +206,16 @@ export default function DraftPreview() {
         {POSITIONS.map((pos) => (
           <button
             key={pos}
+            className="mono"
             onClick={() => setPositionFilter(pos)}
             style={{
               background: positionFilter === pos ? "var(--accent-dim)" : "transparent",
               color: positionFilter === pos ? "var(--accent)" : "var(--text-muted)",
               border: `1px solid ${positionFilter === pos ? "var(--accent-border)" : "var(--bg-border)"}`,
-              borderRadius: 6,
+              borderRadius: 2,
               padding: "4px 12px",
-              fontSize: 13,
+              fontSize: 12.5,
+              fontWeight: 600,
             }}
           >
             {pos}

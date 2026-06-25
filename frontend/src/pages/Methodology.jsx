@@ -59,7 +59,7 @@ function InlineText({ text }) {
         }
         if (part.startsWith("`") && part.endsWith("`")) {
           return (
-            <code key={i} className="mono" style={{ background: "var(--bg-elevated)", padding: "1px 5px", borderRadius: 4 }}>
+            <code key={i} className="mono" style={{ background: "var(--bg-elevated)", padding: "1px 5px", borderRadius: 2 }}>
               {part.slice(1, -1)}
             </code>
           );

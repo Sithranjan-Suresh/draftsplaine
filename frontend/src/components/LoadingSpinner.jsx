@@ -23,7 +23,7 @@ export default function LoadingSpinner({ label = "Loading..." }) {
           strokeDasharray="90 60"
         />
       </svg>
-      <span style={{ fontSize: 13 }}>{label}</span>
+      <span className="mono" style={{ fontSize: 12.5 }}>{label}</span>
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );

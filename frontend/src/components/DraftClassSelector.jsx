@@ -10,10 +10,11 @@ export default function DraftClassSelector({ year, onChange, maxYear = 2025, min
         background: "var(--bg-elevated)",
         color: "var(--text-primary)",
         border: "1px solid var(--bg-border)",
-        borderRadius: 8,
+        borderRadius: 2,
         padding: "8px 12px",
-        fontSize: 14,
-        fontFamily: "var(--font-body)",
+        fontSize: 13,
+        fontFamily: "var(--font-mono)",
+        fontWeight: 600,
       }}
     >
       {years.map((y) => (

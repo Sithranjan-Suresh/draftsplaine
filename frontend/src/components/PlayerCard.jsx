@@ -106,8 +106,7 @@ export default function PlayerCard({ gsisId, onClose }) {
               <div
                 style={{
                   background: "var(--bg-elevated)",
-                  borderLeft: "3px solid var(--neutral)",
-                  borderRadius: 8,
+                  borderLeft: "3px solid var(--bust)",
                   padding: "10px 14px",
                   margin: "0 0 14px",
                   fontSize: 12,
@@ -115,9 +114,14 @@ export default function PlayerCard({ gsisId, onClose }) {
                   lineHeight: 1.5,
                 }}
               >
-                TDVS measures outcome value relative to slot expectation — it does not adjust for team context
-                (offensive line quality, receiving talent, scheme, opponent strength). A score this high partly
-                reflects situational support, not individual talent in isolation.
+                <span className="grade-stamp" style={{ marginBottom: 6, display: "inline-block" }}>
+                  Outlier — unadjusted
+                </span>
+                <div>
+                  TDVS measures outcome value relative to slot expectation — it does not adjust for team context
+                  (offensive line quality, receiving talent, scheme, opponent strength). A score this high partly
+                  reflects situational support, not individual talent in isolation.
+                </div>
               </div>
             )}
 
@@ -161,6 +165,7 @@ export default function PlayerCard({ gsisId, onClose }) {
             </div>
 
             <button
+              className="mono"
               onClick={() => {
                 onClose();
                 navigate(`/redraft?year=${data.draft_year}`);
@@ -170,10 +175,10 @@ export default function PlayerCard({ gsisId, onClose }) {
                 background: "var(--accent-dim)",
                 color: "var(--accent)",
                 border: "1px solid var(--accent-border)",
-                borderRadius: 8,
+                borderRadius: 2,
                 padding: "8px 14px",
-                fontSize: 13,
-                fontWeight: 500,
+                fontSize: 12.5,
+                fontWeight: 600,
               }}
             >
               View {data.draft_year} class in Redraft Simulator →

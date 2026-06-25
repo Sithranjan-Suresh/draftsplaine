@@ -109,14 +109,16 @@ export default function CurveComparison() {
         {POSITION_GROUPS.map((pos) => (
           <button
             key={pos}
+            className="mono"
             onClick={() => setPositionGroup(pos)}
             style={{
               background: positionGroup === pos ? "var(--accent-dim)" : "transparent",
               color: positionGroup === pos ? "var(--accent)" : "var(--text-muted)",
               border: `1px solid ${positionGroup === pos ? "var(--accent-border)" : "var(--bg-border)"}`,
-              borderRadius: 6,
+              borderRadius: 2,
               padding: "4px 14px",
-              fontSize: 13,
+              fontSize: 12.5,
+              fontWeight: 600,
             }}
           >
             {pos}
@@ -150,22 +152,22 @@ export default function CurveComparison() {
               {maxDivergence && (
                 <ReferenceLine
                   x={maxDivergence.pick}
-                  stroke="var(--neutral)"
+                  stroke="var(--bust)"
                   strokeDasharray="4 4"
-                  label={{ value: "Max divergence", fill: "var(--neutral)", fontSize: 10, position: "top" }}
+                  label={{ value: "Max divergence", fill: "var(--bust)", fontSize: 10, position: "top" }}
                 />
               )}
               <Area
                 dataKey="ci_band"
                 name="ci_band"
-                stroke="var(--accent-border)"
+                stroke="var(--highlight)"
                 strokeWidth={1}
-                fill="var(--accent-dim)"
+                fill="var(--highlight-dim)"
                 fillOpacity={1}
                 isAnimationActive={false}
               />
-              <Line dataKey="chase" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} />
-              <Line dataKey="draftspline" stroke="var(--accent)" strokeWidth={2.5} dot={false} />
+              <Line dataKey="chase" stroke="var(--accent)" strokeWidth={1.5} strokeDasharray="5 4" dot={false} />
+              <Line dataKey="draftspline" stroke="var(--ink)" strokeWidth={2.5} dot={false} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>
@@ -174,32 +176,32 @@ export default function CurveComparison() {
       {divergenceCallout && (
         <div
           style={{
-            background: "var(--neutral-dim)",
-            border: "1px solid var(--neutral)",
-            borderRadius: 10,
-            padding: "12px 16px",
+            background: "var(--bg-elevated)",
+            borderLeft: "3px solid var(--bust)",
+            padding: "11px 16px",
             marginTop: 14,
             fontSize: 13,
             color: "var(--text-primary)",
           }}
         >
-          {divergenceCallout}
+          <span className="eyebrow" style={{ color: "var(--bust)" }}>Margin note — divergence</span>
+          <div style={{ marginTop: 4 }}>{divergenceCallout}</div>
         </div>
       )}
 
       {ciWidthCallout && (
         <div
           style={{
-            background: "var(--accent-dim)",
-            border: "1px solid var(--accent-border)",
-            borderRadius: 10,
-            padding: "12px 16px",
+            background: "var(--bg-elevated)",
+            borderLeft: "3px solid var(--highlight)",
+            padding: "11px 16px",
             marginTop: 10,
             fontSize: 13,
             color: "var(--text-primary)",
           }}
         >
-          {ciWidthCallout}
+          <span className="eyebrow" style={{ color: "var(--highlight)" }}>Margin note — confidence band</span>
+          <div style={{ marginTop: 4 }}>{ciWidthCallout}</div>
         </div>
       )}
     </div>
