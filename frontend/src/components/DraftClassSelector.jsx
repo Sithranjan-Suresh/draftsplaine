@@ -1,6 +1,7 @@
-const YEARS = Array.from({ length: 14 }, (_, i) => 2025 - i); // 2025..2012
+export default function DraftClassSelector({ year, onChange, maxYear = 2025, minYear = 2012 }) {
+  const years = [];
+  for (let y = maxYear; y >= minYear; y--) years.push(y);
 
-export default function DraftClassSelector({ year, onChange }) {
   return (
     <select
       value={year}
@@ -15,7 +16,7 @@ export default function DraftClassSelector({ year, onChange }) {
         fontFamily: "var(--font-body)",
       }}
     >
-      {YEARS.map((y) => (
+      {years.map((y) => (
         <option key={y} value={y}>
           {y} Draft Class
         </option>

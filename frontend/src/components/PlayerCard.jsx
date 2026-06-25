@@ -102,6 +102,25 @@ export default function PlayerCard({ gsisId, onClose }) {
               </p>
             )}
 
+            {data.modeled && data.qualifying && data.tdvs !== null && data.tdvs >= 5 && (
+              <div
+                style={{
+                  background: "var(--bg-elevated)",
+                  borderLeft: "3px solid var(--neutral)",
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  margin: "0 0 14px",
+                  fontSize: 12,
+                  color: "var(--text-muted)",
+                  lineHeight: 1.5,
+                }}
+              >
+                TDVS measures outcome value relative to slot expectation — it does not adjust for team context
+                (offensive line quality, receiving talent, scheme, opponent strength). A score this high partly
+                reflects situational support, not individual talent in isolation.
+              </div>
+            )}
+
             {data.modeled && data.season_breakdown.length > 0 && (
               <div style={{ height: 220, margin: "20px 0" }}>
                 <ResponsiveContainer width="100%" height="100%">

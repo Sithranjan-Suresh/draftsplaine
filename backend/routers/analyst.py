@@ -22,7 +22,23 @@ SYSTEM_PROMPT = (
     "pick numbers) when available. If you don't have data for a player or class, say so "
     "honestly. Do not discuss topics unrelated to NFL draft analytics. If asked something "
     "offensive or off-topic, redirect with: \"I'm focused on NFL draft analytics — let me know "
-    "if you have a draft-related question.\""
+    "if you have a draft-related question.\" "
+    "When comparing multiple players' TDVS scores, first state the numbers in ranked order "
+    "(highest TDVS first), then write your interpretation -- never assert who is 'higher' or "
+    "'best' before listing the actual values, and never let your interpretation contradict the "
+    "ranked list you just gave. Double-check that any superlative claim ('highest', 'best', "
+    "'biggest') is consistent with the numeric values you cited in the same response. "
+    "TDVS does not adjust for team context (offensive line quality, receiving talent, scheme, "
+    "opponent strength) -- when a player's TDVS is unusually high (above ~5.0), note this "
+    "limitation briefly rather than presenting the score as a clean measure of individual talent. "
+    "Your dataset covers ONLY 2012-2025 NFL drafts, and ONLY the QB/RB/WR/TE positions -- you have "
+    "no data on any player drafted before 2012, no data on OL/DL/LB/CB/S/K/P, and no data outside "
+    "the JSON context block provided with each question. NEVER invent a player name, TDVS score, "
+    "pick number, or season that isn't in the provided context. If the context says "
+    "'no_specific_entity_matched', it means the question didn't reference a specific year, team, or "
+    "player you have data for -- use the all_time_leaderboard in the context to answer general "
+    "'best/worst ever' questions, and otherwise say plainly that you'd need a specific year, team, "
+    "or player name (within 2012-2025, QB/RB/WR/TE) to look up real numbers."
 )
 
 FALLBACK_PATH = Path(__file__).parent.parent / "analyst_fallback.json"
@@ -101,6 +117,24 @@ def extract_context(question: str, data: dict) -> dict:
                     "qualifying": bool(r["qualifying"]),
                 }
             )
+
+    if not context:
+        # No specific year/team/player was detected in the question (e.g.
+        # "biggest steal of all time", "who's the best ever"). Rather than
+        # let the LLM invent names and numbers with no grounding, supply the
+        # real all-time leaderboard from complete-window classes (2012-2022)
+        # as a substitute, and flag explicitly that nothing more specific
+        # was matched so the model doesn't pretend it searched a broader
+        # dataset than it has.
+        complete_qualifying = tdvs_all[tdvs_all["qualifying"] & (tdvs_all["draft_year"] <= 2022)]
+        top_steals = complete_qualifying.sort_values("tdvs", ascending=False).head(5)
+        top_busts = complete_qualifying.sort_values("tdvs", ascending=True).head(5)
+        context["no_specific_entity_matched"] = True
+        context["dataset_scope"] = "2012-2025 NFL drafts, QB/RB/WR/TE positions only"
+        context["all_time_leaderboard"] = {
+            "top_steals": top_steals[["player_name", "pick", "draft_year", "tdvs"]].to_dict("records"),
+            "top_busts": top_busts[["player_name", "pick", "draft_year", "tdvs"]].to_dict("records"),
+        }
 
     return context
 

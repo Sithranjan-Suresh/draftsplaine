@@ -5,9 +5,26 @@ NFL draft intelligence that reconstructs draft value using rookie-contract EPA, 
 **Live URL:** _deploy to Vercel and paste the URL here_
 **API URL:** _deploy to Render and paste the URL here_
 
-## The Pitch
+## The Finding
 
-DraftSpline reframes the NFL draft as a capital allocation problem: every pick is scored by **TDVS (True Draft Value Score)** — the EPA a player actually produced during their 4-year rookie contract, divided by what was historically expected from that draft slot. The result is a complete re-ranking of draft history that exposes which picks were genuinely worth their cost, and which weren't.
+Using EPA from nflverse across 14 draft classes (2012-2025), DraftSpline finds:
+
+- **The 7th-round pick #262 in 2022 — Brock Purdy, "Mr. Irrelevant" — produced 24.48x his slot's expected value.** That's the single largest TDVS in the dataset, larger than every first-round pick in any class we modeled.
+- **60% of qualifying quarterback picks miss their slot's expectation entirely** (TDVS < 0.5) — the highest bust rate of any modeled position, despite QB being the position teams pay the most draft capital for.
+- **The New York Jets have drafted -1,096.9 EPA below expectation since 2012** — the single worst accumulated drafting record of any of the 32 franchises, while the 49ers lead at +301.8.
+
+Every pick is scored by **TDVS (True Draft Value Score)**: the EPA a player actually produced during their 4-year rookie contract, divided by what was historically expected from that draft slot. TDVS > 1.0 means a player outperformed his slot; the formula reframes the draft as a capital allocation problem instead of a talent-guessing game.
+
+**Caveat we lead with, not hide:** TDVS does not adjust for team context — offensive line quality, receiving talent, scheme, opponent strength. Purdy's 24.48 partly reflects a historically strong 49ers OL and receiving corps, not value created in a vacuum. The app surfaces this caveat directly on any player card with an outlier score (TDVS ≥ 5).
+
+## Demo Walkthrough
+
+1. **Draft Board** (`/`) — opens on the 2020 class, filtered to modeled positions by default. The three hero stats up top are the lead claims above. Try the "Pick Order" ↔ "TDVS Ranking" toggle — Jordan Love (pick #26) and Justin Herbert (pick #6) jump ahead of Joe Burrow (pick #1) despite being picked later.
+2. **Click any player row** — opens a drill-down with the year-by-year EPA bar chart, the auto-generated one-sentence verdict, and a "View in Redraft Simulator" link.
+3. **Curve Comparison** (`/curve`) — toggle position groups. The dynamic callout below the chart states the exact pick-number gap between the traditional Stuart Chase chart and DraftSpline's EPA curve for whichever position is selected.
+4. **Redraft Simulator** (`/redraft`) — restricted to 2012-2022 classes (complete 4-year rookie windows only — see the inline disclaimer for why). Click "Rebuild Draft" on 2020 and watch the order change for ~90% of picks.
+5. **AI Analyst** (`/analyst`) — ask "Who is the biggest draft steal since 2018?" and watch the response render an inline EPA bar chart for the player it names, not just prose.
+6. **GM Scorecard** (`/teams`) — the best/worst franchise hero cards at the top are the same numbers as the Draft Board's lead claim, traceable end to end.
 
 ## Screenshots
 
@@ -15,7 +32,7 @@ _Screenshots pending — capture `draft_board_2020.png`, `curve_comparison.png`,
 
 ## How It Works
 
-- **Data source:** nflverse play-by-play (2012-2023) and draft pick data, pulled via `nfl_data_py`.
+- **Data source:** nflverse play-by-play (2012-2025) and draft pick data, pulled via `nfl_data_py`. Classes 2023-2025 are scored as preliminary (rookie windows incomplete) and flagged accordingly; only 2012-2022 classes feed curve fitting and the Redraft Simulator.
 - **TDVS formula:** `rookie_epa_total / expected_epa[pick][position]`, computed across Years 1-4 of each player's rookie contract, with games-played normalization for injury-shortened seasons.
 - **Curve fitting:** the expected-EPA curve is fit per position (QB/RB/WR/TE) using Nadaraya-Watson kernel smoothing followed by isotonic regression, with a 90% confidence band that widens in sparse late rounds — reported honestly rather than smoothed away.
 - **Simulation logic:** the Redraft Simulator re-orders all qualifying players in a class by TDVS descending and reassigns them to the original pick slots, then computes each team's value delta against what they actually drafted.

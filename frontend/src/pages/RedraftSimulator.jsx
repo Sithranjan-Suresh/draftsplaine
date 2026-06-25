@@ -35,9 +35,19 @@ function PickRow({ pick, highlighted, onHover, onLeave }) {
   );
 }
 
+const LAST_COMPLETE_WINDOW_YEAR = 2022; // last draft class with a fully-elapsed 4-year rookie window
+
 export default function RedraftSimulator() {
   const [searchParams] = useSearchParams();
-  const initialYear = Number(searchParams.get("year")) || 2020;
+  const requestedYear = Number(searchParams.get("year")) || 2020;
+  // Restrict to classes with a complete 4-year rookie window. Partial-window
+  // classes (2023-2025) combine small-sample noise with positions whose
+  // expected-EPA baseline is near zero (RB), which can inflate TDVS into
+  // implausible "best picks ever" results for rookie-year flukes. Rather
+  // than clamp or hide individual outlier values -- the product spec
+  // explicitly says not to clamp deltas -- we restrict the *input* to
+  // classes stable enough for the comparison to mean something.
+  const initialYear = requestedYear > LAST_COMPLETE_WINDOW_YEAR ? LAST_COMPLETE_WINDOW_YEAR : requestedYear;
   const [year, setYear] = useState(initialYear);
   const [team, setTeam] = useState("");
   const [simResult, setSimResult] = useState(null);
@@ -87,11 +97,13 @@ export default function RedraftSimulator() {
         The Optimized Order ranks players purely by the value they produced relative to their slot — it is{" "}
         <strong>not</strong> a prescriptive draft strategy. Team need, positional scarcity, and pre-draft scouting
         information aren't modeled, so it can place a player at a much earlier slot than any team would have
-        realistically used on them (e.g. a Day 3 steal "moving up" to a top-10 slot).
+        realistically used on them (e.g. a Day 3 steal "moving up" to a top-10 slot). Limited to 2012-
+        {LAST_COMPLETE_WINDOW_YEAR} classes, where every qualifying player has a complete 4-year rookie window —
+        more recent classes have only 1-3 seasons of data, which is too small a sample to rank reliably.
       </div>
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 20, flexWrap: "wrap" }}>
-        <DraftClassSelector year={year} onChange={setYear} />
+        <DraftClassSelector year={year} onChange={setYear} maxYear={LAST_COMPLETE_WINDOW_YEAR} />
         <input
           placeholder="Team abbr (optional, e.g. CIN)"
           value={team}
