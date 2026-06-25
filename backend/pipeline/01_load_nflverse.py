@@ -14,7 +14,20 @@ RAW_DIR = Path(__file__).parent / "raw"
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _fix_mixed_object_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """nfl_data_py occasionally returns object columns with mixed types
+    (e.g. jersey_number as float and str in the same column), which pyarrow
+    rejects. Coerce any object column with mixed non-null types to string."""
+    for col in df.columns:
+        if df[col].dtype == object:
+            non_null = df[col].dropna()
+            if len(non_null) and non_null.map(type).nunique() > 1:
+                df[col] = df[col].astype(str).where(df[col].notna(), None)
+    return df
+
+
 def save(df: pd.DataFrame, name: str) -> None:
+    df = _fix_mixed_object_columns(df)
     path = RAW_DIR / name
     df.to_parquet(path, index=False)
     print(f"  -> wrote {path} ({len(df):,} rows, {len(df.columns)} cols)")
