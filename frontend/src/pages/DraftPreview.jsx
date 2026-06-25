@@ -273,12 +273,12 @@ export default function DraftPreview() {
         Sum of expected EPA across each team's 2026 picks (modeled positions only). Trade-chain data isn't available
         from nflverse, so this reflects each team's final pick slate, not who traded up or down to get there.
       </p>
-      <div className="card" style={{ padding: 20, height: 520 }}>
+      <div className="card" style={{ padding: 20, height: Math.max(520, teamTotals.length * 24) }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={teamTotals} layout="vertical" margin={{ left: 10, right: 20 }}>
             <CartesianGrid stroke="var(--bg-border)" strokeOpacity={0.4} horizontal={false} />
             <XAxis type="number" stroke="var(--text-muted)" fontSize={11} />
-            <YAxis type="category" dataKey="team" stroke="var(--text-muted)" fontSize={11} width={50} />
+            <YAxis type="category" dataKey="team" stroke="var(--text-muted)" fontSize={11} width={50} interval={0} />
             <Tooltip content={<PreviewTooltip />} />
             <Bar dataKey="total" radius={[0, 4, 4, 0]}>
               {teamTotals.map((t, i) => (
