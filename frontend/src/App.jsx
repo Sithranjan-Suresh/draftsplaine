@@ -1,5 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import NavBar from "./components/NavBar";
+import Landing from "./pages/Landing";
 import DraftBoard from "./pages/DraftBoard";
 import CurveComparison from "./pages/CurveComparison";
 import RedraftSimulator from "./pages/RedraftSimulator";
@@ -9,12 +10,16 @@ import Methodology from "./pages/Methodology";
 import DraftPreview from "./pages/DraftPreview";
 
 export default function App() {
+  const location = useLocation();
+  const isLanding = location.pathname === "/";
+
   return (
     <>
-      <NavBar />
-      <main className="app-main">
+      {!isLanding && <NavBar />}
+      <main className={isLanding ? undefined : "app-main"}>
         <Routes>
-          <Route path="/" element={<DraftBoard />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/board" element={<DraftBoard />} />
           <Route path="/curve" element={<CurveComparison />} />
           <Route path="/redraft" element={<RedraftSimulator />} />
           <Route path="/preview" element={<DraftPreview />} />

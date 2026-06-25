@@ -1,7 +1,7 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 
 const LINKS = [
-  { to: "/", label: "Draft Board" },
+  { to: "/board", label: "Draft Board" },
   { to: "/curve", label: "Curve" },
   { to: "/redraft", label: "Redraft" },
   { to: "/preview", label: "2026 Draft", badge: "NEW" },
@@ -25,7 +25,8 @@ export default function NavBar() {
         zIndex: 50,
       }}
     >
-      <div
+      <Link
+        to="/"
         className="mono"
         style={{
           fontWeight: 700,
@@ -35,6 +36,7 @@ export default function NavBar() {
           display: "flex",
           alignItems: "baseline",
           gap: 8,
+          textDecoration: "none",
         }}
       >
         <span
@@ -49,7 +51,7 @@ export default function NavBar() {
           TDVS
         </span>
         DRAFT<span style={{ color: "var(--accent)" }}>SPLINE</span>
-      </div>
+      </Link>
       <div style={{ display: "flex", gap: 2 }}>
         {LINKS.map((link) => (
           <NavLink

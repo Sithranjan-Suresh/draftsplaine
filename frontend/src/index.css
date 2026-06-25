@@ -211,3 +211,16 @@ table {
     row-gap: 6px;
   }
 }
+
+@media (max-width: 520px) {
+  .landing-file-stats {
+    grid-template-columns: 1fr !important;
+  }
+  .landing-file-stats > div {
+    border-left: none !important;
+    border-top: 1px solid var(--bg-border);
+  }
+  .landing-file-stats > div:first-child {
+    border-top: none;
+  }
+}
