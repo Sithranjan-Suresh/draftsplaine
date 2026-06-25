@@ -9,7 +9,7 @@ from pathlib import Path
 import nfl_data_py as nfl
 import pandas as pd
 
-SEASONS = list(range(2012, 2024))
+SEASONS = list(range(2012, 2026))
 RAW_DIR = Path(__file__).parent / "raw"
 RAW_DIR.mkdir(parents=True, exist_ok=True)
 

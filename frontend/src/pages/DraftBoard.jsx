@@ -87,6 +87,23 @@ export default function DraftBoard() {
       {loading && <LoadingSpinner label="Loading draft class..." />}
       {error && <ErrorBanner message={error} />}
 
+      {!loading && !error && data && !data.window_complete && (
+        <div
+          style={{
+            background: "var(--neutral-dim)",
+            border: "1px solid var(--neutral)",
+            borderRadius: 10,
+            padding: "12px 16px",
+            marginBottom: 16,
+            fontSize: 13,
+            color: "var(--text-primary)",
+          }}
+        >
+          Partial data — this class has {data.rookie_seasons_elapsed} of 4 rookie seasons available. TDVS scores are
+          preliminary and will change.
+        </div>
+      )}
+
       {!loading && !error && data && (
         <div className="card" style={{ maxHeight: 640, overflowY: "auto" }}>
           {sortedPicks.map((p) => (

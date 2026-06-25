@@ -4,7 +4,9 @@ from fastapi import APIRouter, HTTPException, Request
 router = APIRouter()
 
 MIN_YEAR = 2012
-MAX_YEAR = 2022
+MAX_YEAR = 2025
+LAST_COMPLETE_WINDOW_YEAR = 2022  # last draft class with a fully-elapsed 4-year rookie window
+MAX_SEASON_AVAILABLE = 2025
 
 
 @router.get("/api/draft/{year}")
@@ -29,6 +31,7 @@ async def get_draft_class(year: int, request: Request):
         on=["gsis_id", "draft_year"],
         how="left",
     ).merge(teams[["team_abbr", "team_name"]], left_on="team", right_on="team_abbr", how="left")
+    rookie_seasons_elapsed = min(4, max(0, MAX_SEASON_AVAILABLE - year + 1))
     class_df = class_df.sort_values("pick")
 
     picks = []
@@ -56,5 +59,7 @@ async def get_draft_class(year: int, request: Request):
     return {
         "year": year,
         "picks": picks,
+        "rookie_seasons_elapsed": rookie_seasons_elapsed,
+        "window_complete": rookie_seasons_elapsed >= 4,
         "data_as_of": data_as_of,
     }

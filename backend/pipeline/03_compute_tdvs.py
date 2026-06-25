@@ -11,7 +11,8 @@ import pandas as pd
 
 RAW_DIR = Path(__file__).parent / "raw"
 
-DRAFT_YEARS = list(range(2012, 2023))  # 2012-2022 inclusive
+DRAFT_YEARS = list(range(2012, 2026))  # 2012-2025 inclusive
+MAX_SEASON_AVAILABLE = 2025  # most recent NFL season present in player_epa.parquet
 
 # Minimum qualifying plays across the 4-year rookie window, per full_context.md
 MIN_PLAYS = {
@@ -72,6 +73,8 @@ def main() -> None:
             seasons_available += 1
 
         qualifying = total_plays >= MIN_PLAYS.get(position, 999999)
+        rookie_seasons_elapsed = min(4, max(0, MAX_SEASON_AVAILABLE - draft_year + 1))
+        window_complete = rookie_seasons_elapsed >= 4
 
         rows.append(
             {
@@ -85,6 +88,13 @@ def main() -> None:
                 "rookie_epa_total": round(rookie_epa_total, 1),
                 "games_played_total": games_played_total,
                 "seasons_available": seasons_available,
+                "rookie_seasons_elapsed": rookie_seasons_elapsed,
+                "window_complete": window_complete,
+                # only fully-elapsed rookie windows are used to FIT the
+                # expected-EPA curve (step 4) -- a partial window's lower
+                # total EPA would otherwise bias the curve down for recent
+                # picks. Partial-window classes still get a TDVS computed
+                # against that curve in step 5, flagged as preliminary.
                 "qualifying": bool(qualifying),
             }
         )

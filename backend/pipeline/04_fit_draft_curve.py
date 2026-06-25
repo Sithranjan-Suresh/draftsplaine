@@ -89,7 +89,10 @@ def fit_position_curve(sub: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> None:
     prelim = pd.read_parquet(RAW_DIR / "tdvs_scores_preliminary.parquet")
-    prelim = prelim[prelim["qualifying"]]
+    # Only players with a fully-elapsed 4-year rookie window are used to FIT
+    # the curve -- otherwise a partial window's lower cumulative EPA would
+    # bias the "expected" value down for recent draft classes.
+    prelim = prelim[prelim["qualifying"] & prelim["window_complete"]]
 
     curve_frames = []
     for position in POSITIONS:

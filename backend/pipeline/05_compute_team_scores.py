@@ -89,6 +89,8 @@ def compute_tdvs() -> pd.DataFrame:
             "tdvs",
             "games_played_total",
             "qualifying",
+            "rookie_seasons_elapsed",
+            "window_complete",
         ]
     ]
     return out

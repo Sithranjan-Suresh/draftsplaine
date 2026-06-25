@@ -1,4 +1,4 @@
-const YEARS = Array.from({ length: 11 }, (_, i) => 2022 - i); // 2022..2012
+const YEARS = Array.from({ length: 14 }, (_, i) => 2025 - i); // 2025..2012
 
 export default function DraftClassSelector({ year, onChange }) {
   return (
