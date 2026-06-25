@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import useDraftClass from "../hooks/useDraftClass";
 import DraftClassSelector from "../components/DraftClassSelector";
 import PlayerRow from "../components/PlayerRow";
@@ -70,6 +71,9 @@ function BustRateChart() {
     </div>
   );
 }
+
+const prefersReducedMotion =
+  typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
 export default function DraftBoard() {
   const [year, setYear] = useState(2020);
@@ -237,9 +241,8 @@ export default function DraftBoard() {
       {!loading && !error && data && !data.window_complete && (
         <div
           style={{
-            background: "var(--neutral-dim)",
-            border: "1px solid var(--neutral)",
-            borderRadius: 10,
+            background: "var(--bg-elevated)",
+            borderLeft: "3px solid var(--highlight)",
             padding: "12px 16px",
             marginBottom: 16,
             fontSize: 13,
@@ -253,23 +256,33 @@ export default function DraftBoard() {
 
       {!loading && !error && data && (
         <div className="card" style={{ maxHeight: 640, overflowY: "auto" }}>
-          {sortedPicks.map((p) => (
-            <div key={p.gsis_id} style={{ transition: "transform 0.28s ease, opacity 0.28s ease" }}>
-              <PlayerRow
-                pick={p.pick}
-                round={p.round}
-                teamAbbr={p.team}
-                playerName={p.player_name}
-                position={p.position}
-                tdvs={p.tdvs}
-                qualifying={p.qualifying}
-                modeled={p.modeled}
-                rookieEpaTotal={p.rookie_epa_total}
-                expectedEpa={p.expected_epa}
-                onClick={() => setSelectedPlayer(p)}
-              />
-            </div>
-          ))}
+          <AnimatePresence initial={false}>
+            {sortedPicks.map((p) => (
+              <motion.div
+                key={p.gsis_id}
+                layout={!prefersReducedMotion}
+                transition={
+                  prefersReducedMotion
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 500, damping: 40, mass: 0.6 }
+                }
+              >
+                <PlayerRow
+                  pick={p.pick}
+                  round={p.round}
+                  teamAbbr={p.team}
+                  playerName={p.player_name}
+                  position={p.position}
+                  tdvs={p.tdvs}
+                  qualifying={p.qualifying}
+                  modeled={p.modeled}
+                  rookieEpaTotal={p.rookie_epa_total}
+                  expectedEpa={p.expected_epa}
+                  onClick={() => setSelectedPlayer(p)}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
 
