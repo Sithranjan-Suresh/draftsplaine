@@ -18,6 +18,11 @@ allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[origin.strip() for origin in allowed_origins],
+    # Vercel gives every branch/preview deploy its own subdomain
+    # (<project>-<hash>-<team>.vercel.app) in addition to the stable
+    # production domain set via ALLOWED_ORIGINS -- match those too so
+    # preview deploys aren't permanently CORS-blocked.
+    allow_origin_regex=r"https://draftsplaine.*\.vercel\.app",
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
