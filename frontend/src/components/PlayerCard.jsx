@@ -1,10 +1,21 @@
 import { BarChart, Bar, Cell, XAxis, YAxis, ReferenceLine, ResponsiveContainer, Tooltip, CartesianGrid } from "recharts";
+import { useNavigate } from "react-router-dom";
 import usePlayer from "../hooks/usePlayer";
 import TeamLogo from "./TeamLogo";
 import TDVSBadge from "./TDVSBadge";
 import LoadingSpinner from "./LoadingSpinner";
 import ErrorBanner from "./ErrorBanner";
 import { formatEPA } from "../lib/utils";
+
+function buildSummarySentence(data) {
+  if (!data.modeled || !data.qualifying || data.tdvs === null) return null;
+  const bestSeason = [...data.season_breakdown].sort((a, b) => b.total_epa - a.total_epa)[0];
+  const verdict = data.tdvs >= 1.2 ? "outperformed" : data.tdvs >= 0.8 ? "roughly matched" : "underperformed";
+  const seasonNote = bestSeason
+    ? ` ${data.player_name.split(" ").slice(-1)[0]}'s best season (${bestSeason.season}) was worth ${formatEPA(bestSeason.total_epa)} EPA.`
+    : "";
+  return `Pick #${data.pick} ${verdict} the historical expectation for that slot (${formatEPA(data.expected_epa)} expected vs. ${formatEPA(data.rookie_epa_total)} actual).${seasonNote}`;
+}
 
 function ChartTooltip({ active, payload, label }) {
   if (!active || !payload || !payload.length) return null;
@@ -18,6 +29,7 @@ function ChartTooltip({ active, payload, label }) {
 
 export default function PlayerCard({ gsisId, onClose }) {
   const { data, loading, error } = usePlayer(gsisId);
+  const navigate = useNavigate();
 
   return (
     <div
@@ -84,6 +96,12 @@ export default function PlayerCard({ gsisId, onClose }) {
               </div>
             )}
 
+            {buildSummarySentence(data) && (
+              <p style={{ fontSize: 13, color: "var(--text-primary)", margin: "14px 0", lineHeight: 1.5 }}>
+                {buildSummarySentence(data)}
+              </p>
+            )}
+
             {data.modeled && data.season_breakdown.length > 0 && (
               <div style={{ height: 220, margin: "20px 0" }}>
                 <ResponsiveContainer width="100%" height="100%">
@@ -122,6 +140,25 @@ export default function PlayerCard({ gsisId, onClose }) {
               <Stat label="Expected EPA" value={formatEPA(data.expected_epa)} />
               <Stat label="Games Played" value={data.games_played_total} />
             </div>
+
+            <button
+              onClick={() => {
+                onClose();
+                navigate(`/redraft?year=${data.draft_year}`);
+              }}
+              style={{
+                marginTop: 18,
+                background: "var(--accent-dim)",
+                color: "var(--accent)",
+                border: "1px solid var(--accent-border)",
+                borderRadius: 8,
+                padding: "8px 14px",
+                fontSize: 13,
+                fontWeight: 500,
+              }}
+            >
+              View {data.draft_year} class in Redraft Simulator →
+            </button>
           </>
         )}
       </div>

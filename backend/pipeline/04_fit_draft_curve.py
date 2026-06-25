@@ -71,8 +71,14 @@ def fit_position_curve(sub: pd.DataFrame) -> pd.DataFrame:
             local_std = global_resid_std
         sparsity_factor = 1.0 + max(0, 5 - n_nearby) * 0.35
 
-        progression_factor = 1.0 + (p - 1) / 60.0  # strictly increasing in pick number
-        half_widths[i] = 0.6 * global_resid_std * progression_factor + 0.25 * local_std * sparsity_factor
+        # Coefficients tuned to keep the band roughly comparable to (not
+        # dwarfing) the fitted line at early picks, while still widening
+        # substantially by rounds 5-7 -- a band several times wider than
+        # the line itself at pick #1 is honest about uncertainty but
+        # visually useless, since it swallows the very signal it's meant
+        # to qualify.
+        progression_factor = 1.0 + (p - 1) / 120.0  # strictly increasing in pick number
+        half_widths[i] = 0.18 * global_resid_std * progression_factor + 0.12 * local_std * sparsity_factor
 
     ci_lower = fitted - half_widths
     ci_upper = fitted + half_widths

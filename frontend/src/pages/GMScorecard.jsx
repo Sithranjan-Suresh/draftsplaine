@@ -40,12 +40,52 @@ export default function GMScorecard() {
     }
   };
 
+  const best = data?.teams.find((t) => t.rank === 1);
+  const worst = data?.teams.length ? data.teams.reduce((a, b) => (b.rank > a.rank ? b : a)) : null;
+
   return (
     <div>
       <h1 style={{ fontSize: 28, marginBottom: 4 }}>GM Scorecard</h1>
       <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16 }}>
-        Franchise-level drafting efficiency, 2012-2022.
+        Franchise-level drafting efficiency, 2012-2025.
       </p>
+
+      {best && worst && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 20 }}>
+          <div className="card" style={{ padding: 16, borderColor: "var(--steal)" }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 6 }}>
+              Best Drafting Franchise
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <TeamLogo teamAbbr={best.team} size={32} />
+              <div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--steal)" }}>
+                  {best.team_name || best.team}
+                </div>
+                <div className="mono" style={{ fontSize: 12, color: "var(--text-primary)" }}>
+                  {formatEPA(best.epa_vs_expected)} EPA above expectation
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="card" style={{ padding: 16, borderColor: "var(--bust)" }}>
+            <div style={{ fontSize: 11, color: "var(--text-muted)", textTransform: "uppercase", marginBottom: 6 }}>
+              Worst Drafting Franchise
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <TeamLogo teamAbbr={worst.team} size={32} />
+              <div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 18, color: "var(--bust)" }}>
+                  {worst.team_name || worst.team}
+                </div>
+                <div className="mono" style={{ fontSize: 12, color: "var(--text-primary)" }}>
+                  {formatEPA(worst.epa_vs_expected)} EPA below expectation
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {loading && <LoadingSpinner label="Loading team scorecards..." />}
       {error && <ErrorBanner message={error} />}

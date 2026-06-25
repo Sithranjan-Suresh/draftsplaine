@@ -16,8 +16,9 @@ function renderMarkdown(content) {
     tableBuffer = [];
   };
 
-  lines.forEach((line) => {
-    if (line.trim().startsWith("|")) {
+  lines.forEach((rawLine) => {
+    const line = rawLine.trim();
+    if (line.startsWith("|")) {
       tableBuffer.push(line);
       return;
     }
@@ -29,10 +30,19 @@ function renderMarkdown(content) {
       blocks.push({ type: "h1", text: line.slice(2) });
     } else if (line.startsWith("- ")) {
       blocks.push({ type: "li", text: line.slice(2) });
-    } else if (line.trim() === "") {
+    } else if (line === "") {
       blocks.push({ type: "br" });
     } else {
-      blocks.push({ type: "p", text: line });
+      // Defensively merge a hard-wrapped continuation line into the
+      // previous paragraph/list-item block instead of starting a new one,
+      // so source text wrapped at column width doesn't render as a wall of
+      // separate single-line paragraphs.
+      const prev = blocks[blocks.length - 1];
+      if (prev && (prev.type === "p" || prev.type === "li")) {
+        prev.text = `${prev.text} ${line}`;
+      } else {
+        blocks.push({ type: "p", text: line });
+      }
     }
   });
   flushTable();
@@ -40,7 +50,7 @@ function renderMarkdown(content) {
 }
 
 function InlineText({ text }) {
-  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g);
   return (
     <>
       {parts.map((part, i) => {
@@ -53,6 +63,9 @@ function InlineText({ text }) {
               {part.slice(1, -1)}
             </code>
           );
+        }
+        if (part.startsWith("*") && part.endsWith("*") && !part.startsWith("**")) {
+          return <em key={i}>{part.slice(1, -1)}</em>;
         }
         return part;
       })}

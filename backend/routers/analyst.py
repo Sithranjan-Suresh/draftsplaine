@@ -105,6 +105,54 @@ def extract_context(question: str, data: dict) -> dict:
     return context
 
 
+def find_mentioned_players(text: str, data: dict, max_players: int = 2) -> list:
+    """Scan a block of text (typically the LLM's answer, where the player
+    names actually appear even if they weren't in the user's question) for
+    known TDVS player names, and attach a full season-by-season EPA
+    breakdown so the frontend can render an inline chart without an extra
+    round trip."""
+    tdvs_all = data["tdvs"]
+    player_epa = data["player_epa"]
+
+    name_tokens = re.findall(r"[A-Z][a-z'.]+(?:\s[A-Z][a-z'.]+){1,2}", text)
+    seen_gsis = set()
+    results = []
+    for name in name_tokens:
+        if len(results) >= max_players:
+            break
+        match = tdvs_all[tdvs_all["player_name"].str.lower() == name.lower()]
+        if match.empty:
+            continue
+        r = match.iloc[0]
+        if r["gsis_id"] in seen_gsis:
+            continue
+        seen_gsis.add(r["gsis_id"])
+
+        draft_year = int(r["draft_year"])
+        window_seasons = list(range(draft_year, draft_year + 4))
+        season_rows = player_epa[
+            (player_epa["gsis_id"] == r["gsis_id"]) & (player_epa["season"].isin(window_seasons))
+        ].sort_values("season")
+        season_breakdown = [
+            {"season": int(sr["season"]), "total_epa": float(sr["total_epa"])} for _, sr in season_rows.iterrows()
+        ]
+
+        results.append(
+            {
+                "gsis_id": r["gsis_id"],
+                "player_name": r["player_name"],
+                "pick": int(r["pick"]),
+                "draft_year": draft_year,
+                "tdvs": float(r["tdvs"]) if pd.notna(r["tdvs"]) else None,
+                "expected_epa": float(r["expected_epa"]) if pd.notna(r["expected_epa"]) else None,
+                "rookie_epa_total": float(r["rookie_epa_total"]) if pd.notna(r["rookie_epa_total"]) else None,
+                "qualifying": bool(r["qualifying"]),
+                "season_breakdown": season_breakdown,
+            }
+        )
+    return results
+
+
 @router.post("/api/analyst")
 async def post_analyst(req: AnalystRequest, request: Request):
     data = request.app.state.data
@@ -134,9 +182,7 @@ async def post_analyst(req: AnalystRequest, request: Request):
             if response.status_code == 200:
                 body = response.json()
                 answer = body["choices"][0]["message"]["content"]
-                data_points = []
-                for player in context.get("players", []):
-                    data_points.append(player)
+                data_points = find_mentioned_players(answer, data)
                 return {"answer": answer, "data_points": data_points, "cached": False}
             print(f"Groq returned non-200: {response.status_code} {response.text[:300]}")
         except Exception as e:  # noqa: BLE001
@@ -144,7 +190,7 @@ async def post_analyst(req: AnalystRequest, request: Request):
 
     fallback_answer = find_fallback(question)
     if fallback_answer:
-        return {"answer": fallback_answer, "data_points": [], "cached": True}
+        return {"answer": fallback_answer, "data_points": find_mentioned_players(fallback_answer, data), "cached": True}
 
     return {
         "answer": "Analyst temporarily unavailable. Please try again.",

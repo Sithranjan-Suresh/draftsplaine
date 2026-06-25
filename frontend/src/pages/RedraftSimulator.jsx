@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import DraftClassSelector from "../components/DraftClassSelector";
 import TeamLogo from "../components/TeamLogo";
 import TDVSBadge from "../components/TDVSBadge";
@@ -35,21 +36,30 @@ function PickRow({ pick, highlighted, onHover, onLeave }) {
 }
 
 export default function RedraftSimulator() {
-  const [year, setYear] = useState(2020);
+  const [searchParams] = useSearchParams();
+  const initialYear = Number(searchParams.get("year")) || 2020;
+  const [year, setYear] = useState(initialYear);
   const [team, setTeam] = useState("");
   const [simResult, setSimResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hoveredPlayer, setHoveredPlayer] = useState(null);
 
-  const handleRebuild = () => {
+  const handleRebuild = (forYear = year) => {
     setLoading(true);
     setError(null);
-    fetchRedraft(year, team || undefined)
+    fetchRedraft(forYear, team || undefined)
       .then(setSimResult)
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   };
+
+  useEffect(() => {
+    if (searchParams.get("year")) {
+      handleRebuild(initialYear);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleReset = () => {
     setSimResult(null);
@@ -62,6 +72,23 @@ export default function RedraftSimulator() {
       <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 16 }}>
         Re-order a draft class by TDVS to see what teams should have done.
       </p>
+
+      <div
+        style={{
+          background: "var(--neutral-dim)",
+          border: "1px solid var(--neutral)",
+          borderRadius: 10,
+          padding: "12px 16px",
+          marginBottom: 16,
+          fontSize: 13,
+          color: "var(--text-primary)",
+        }}
+      >
+        The Optimized Order ranks players purely by the value they produced relative to their slot — it is{" "}
+        <strong>not</strong> a prescriptive draft strategy. Team need, positional scarcity, and pre-draft scouting
+        information aren't modeled, so it can place a player at a much earlier slot than any team would have
+        realistically used on them (e.g. a Day 3 steal "moving up" to a top-10 slot).
+      </div>
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 20, flexWrap: "wrap" }}>
         <DraftClassSelector year={year} onChange={setYear} />
@@ -80,7 +107,7 @@ export default function RedraftSimulator() {
           }}
         />
         <button
-          onClick={handleRebuild}
+          onClick={() => handleRebuild()}
           style={{
             background: "var(--accent)",
             color: "var(--bg-base)",
@@ -150,35 +177,52 @@ export default function RedraftSimulator() {
           </div>
 
           <h3 style={{ fontSize: 16, marginBottom: 10 }}>Team Value Delta</h3>
-          <div className="card" style={{ maxHeight: 360, overflowY: "auto" }}>
-            {simResult.team_deltas.map((td) => (
-              <div
-                key={td.team}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "32px 1fr 140px",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "10px 14px",
-                  borderBottom: "1px solid var(--bg-border)",
-                }}
-              >
-                <TeamLogo teamAbbr={td.team} size={24} />
-                <span style={{ fontSize: 13 }}>{td.team}</span>
-                {td.delta !== null ? (
-                  <span
-                    className="mono"
-                    style={{ color: td.delta >= 0 ? "var(--steal)" : "var(--bust)", fontSize: 13, textAlign: "right" }}
+          <div className="card" style={{ maxHeight: 360, overflowY: "auto", padding: "8px 0" }}>
+            {(() => {
+              const maxAbsDelta = Math.max(1, ...simResult.team_deltas.map((td) => Math.abs(td.delta ?? 0)));
+              return simResult.team_deltas.map((td) => {
+                const barWidthPct = td.delta !== null ? (Math.abs(td.delta) / maxAbsDelta) * 100 : 0;
+                return (
+                  <div
+                    key={td.team}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "32px 50px 1fr 110px",
+                      alignItems: "center",
+                      gap: 12,
+                      padding: "8px 14px",
+                      borderBottom: "1px solid var(--bg-border)",
+                    }}
                   >
-                    {formatEPA(td.delta)} EPA above expectation
-                  </span>
-                ) : (
-                  <span style={{ fontSize: 12, color: "var(--text-muted)", textAlign: "right" }}>
-                    insufficient qualifying picks
-                  </span>
-                )}
-              </div>
-            ))}
+                    <TeamLogo teamAbbr={td.team} size={24} />
+                    <span style={{ fontSize: 13 }}>{td.team}</span>
+                    {td.delta !== null ? (
+                      <div style={{ height: 14, background: "var(--bg-elevated)", borderRadius: 4, overflow: "hidden" }}>
+                        <div
+                          style={{
+                            height: "100%",
+                            width: `${barWidthPct}%`,
+                            background: td.delta >= 0 ? "var(--steal)" : "var(--bust)",
+                            borderRadius: 4,
+                            transition: "width 0.3s ease",
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 12, color: "var(--text-muted)" }}>insufficient qualifying picks</span>
+                    )}
+                    {td.delta !== null && (
+                      <span
+                        className="mono"
+                        style={{ color: td.delta >= 0 ? "var(--steal)" : "var(--bust)", fontSize: 13, textAlign: "right" }}
+                      >
+                        {formatEPA(td.delta)} EPA
+                      </span>
+                    )}
+                  </div>
+                );
+              });
+            })()}
           </div>
         </>
       )}

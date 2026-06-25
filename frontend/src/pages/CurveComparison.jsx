@@ -61,20 +61,30 @@ export default function CurveComparison() {
     }));
   }, [data, positionGroup]);
 
-  const maxDivergencePick = useMemo(() => {
+  const maxDivergence = useMemo(() => {
     if (!chartData.length) return null;
     let maxDiff = -Infinity;
-    let maxPick = null;
+    let best = null;
     chartData.forEach((d) => {
       if (d.draftspline === null) return;
       const diff = Math.abs(d.draftspline - d.chase);
       if (diff > maxDiff) {
         maxDiff = diff;
-        maxPick = d.pick;
+        best = d;
       }
     });
-    return maxPick;
+    return best;
   }, [chartData]);
+
+  const divergenceCallout = useMemo(() => {
+    if (!maxDivergence) return null;
+    const round = Math.ceil(maxDivergence.pick / 32);
+    const overvalued = maxDivergence.chase > maxDivergence.draftspline;
+    const ratio = maxDivergence.draftspline !== 0 ? (maxDivergence.chase / maxDivergence.draftspline).toFixed(1) : "—";
+    return `At pick #${maxDivergence.pick} (Round ${round}), the traditional chart ${
+      overvalued ? "overvalues" : "undervalues"
+    } this slot by roughly ${ratio}x relative to actual ${positionGroup} production — the widest gap on this curve.`;
+  }, [maxDivergence, positionGroup]);
 
   return (
     <div>
@@ -119,9 +129,9 @@ export default function CurveComparison() {
               {ROUND_BOUNDARIES.map((b) => (
                 <ReferenceLine key={b} x={b} stroke="var(--bg-border)" strokeDasharray="2 2" />
               ))}
-              {maxDivergencePick && (
+              {maxDivergence && (
                 <ReferenceLine
-                  x={maxDivergencePick}
+                  x={maxDivergence.pick}
                   stroke="var(--neutral)"
                   strokeDasharray="4 4"
                   label={{ value: "Max divergence", fill: "var(--neutral)", fontSize: 10, position: "top" }}
@@ -135,10 +145,21 @@ export default function CurveComparison() {
         </div>
       )}
 
-      <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 12 }}>
-        Traditional charts most overvalue picks around the region of maximum divergence (typically rounds 2-3) —
-        the gap between the muted and accent lines is the systemic mispricing DraftSpline is built to surface.
-      </p>
+      {divergenceCallout && (
+        <div
+          style={{
+            background: "var(--neutral-dim)",
+            border: "1px solid var(--neutral)",
+            borderRadius: 10,
+            padding: "12px 16px",
+            marginTop: 14,
+            fontSize: 13,
+            color: "var(--text-primary)",
+          }}
+        >
+          {divergenceCallout}
+        </div>
+      )}
     </div>
   );
 }

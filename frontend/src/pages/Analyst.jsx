@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { BarChart, Bar, Cell, XAxis, YAxis, ResponsiveContainer, ReferenceLine } from "recharts";
 import { postAnalystQuestion } from "../lib/api";
+import { formatEPA, formatTDVS } from "../lib/utils";
 
 const STARTER_QUESTIONS = [
   "Was the 2020 draft class good or bad overall?",
@@ -31,6 +33,40 @@ function TypingIndicator() {
   );
 }
 
+function PlayerMiniChart({ player }) {
+  if (!player.season_breakdown || player.season_breakdown.length === 0) return null;
+  return (
+    <div className="card" style={{ marginTop: 8, padding: 12, maxWidth: 320 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary)" }}>{player.player_name}</span>
+        <span className="mono" style={{ fontSize: 13, color: "var(--accent)" }}>
+          TDVS {formatTDVS(player.tdvs)}
+        </span>
+      </div>
+      <div style={{ fontSize: 11, color: "var(--text-muted)", marginBottom: 6 }}>
+        Pick #{player.pick} ({player.draft_year}) · {formatEPA(player.rookie_epa_total)} actual vs.{" "}
+        {formatEPA(player.expected_epa)} expected
+      </div>
+      <div style={{ height: 90 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={player.season_breakdown}>
+            <XAxis dataKey="season" stroke="var(--text-muted)" fontSize={10} />
+            <YAxis hide />
+            {player.expected_epa !== null && (
+              <ReferenceLine y={player.expected_epa / 4} stroke="var(--accent)" strokeDasharray="3 3" />
+            )}
+            <Bar dataKey="total_epa" radius={[3, 3, 0, 0]}>
+              {player.season_breakdown.map((d, i) => (
+                <Cell key={i} fill={d.total_epa >= 0 ? "var(--steal)" : "var(--bust)"} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 export default function Analyst() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -54,7 +90,10 @@ export default function Analyst() {
 
     try {
       const result = await postAnalystQuestion(question);
-      setMessages((prev) => [...prev, { role: "assistant", content: result.answer, cached: result.cached }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: result.answer, cached: result.cached, dataPoints: result.data_points },
+      ]);
     } catch (err) {
       if (err.message.includes("429")) {
         setRateLimited(true);
@@ -115,7 +154,7 @@ export default function Analyst() {
         )}
 
         {messages.map((m, i) => (
-          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 10 }}>
+          <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 10 }}>
             <div
               style={{
                 maxWidth: "75%",
@@ -143,6 +182,13 @@ export default function Analyst() {
                 </span>
               )}
             </div>
+            {m.dataPoints && m.dataPoints.length > 0 && (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+                {m.dataPoints.map((p) => (
+                  <PlayerMiniChart key={p.gsis_id} player={p} />
+                ))}
+              </div>
+            )}
           </div>
         ))}
 
